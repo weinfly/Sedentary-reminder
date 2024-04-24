@@ -43,19 +43,6 @@ namespace Reminder
         
         private void Form1_Load(object sender, EventArgs e)
         {
-
-            //任务栏高度
-            //Size OutTaskBarSize = new Size(SystemInformation.WorkingArea.Width, SystemInformation.WorkingArea.Height);
-            //Size ScreenSize = new Size(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
-            //this.Height = ScreenSize.Height - OutTaskBarSize.Height;
-            //Size TaskBarSize;
-
-            //TaskBarSize = new Size(
-            //                (ScreenSize.Width - (ScreenSize.Width - OutTaskBarSize.Width)),
-            //                (ScreenSize.Height - OutTaskBarSize.Height)
-             //               );
-            
-
             wrk_seconds = 0; 
 
             if (wrk_seconds >= 10)
@@ -249,5 +236,37 @@ namespace Reminder
         {
            
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            // 推迟
+            WorkFrm workFrm = new WorkFrm(wrk_minutes += 10, rst_minutes, input_flag);
+            workFrm.Show();
+            this.Close();
+        }
+
+        private void btnRestart_Click(object sender, EventArgs e)
+        {
+            this.timerWrk.Enabled = !this.timerWrk.Enabled;
+            //WorkFrm wrkFrm = new WorkFrm(wrk_minutes, rst_minutes, input_flag);
+            //wrkFrm.Show();
+            //this.Close();
+        }
+        /* private void button1_Click(object sender, EventArgs e)
+{
+this.timerWrk.Enabled = !this.timerWrk.Enabled;
+}
+
+private void button2_Click(object sender, EventArgs e)
+{
+// 推迟
+WorkFrm workFrm = new WorkFrm(wrk_minutes+=10, rst_minutes, input_flag);
+workFrm.Show();
+this.Close();
+}
+* 
+* 
+* 
+*/
     }
 }
