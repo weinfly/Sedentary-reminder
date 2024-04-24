@@ -1,4 +1,4 @@
-克隆自https://github.com/wjbgis/Sedentary-reminder。
+克隆自https://github.com/wjbgis/Sedentary-reminder
 进行部分修改，主要是将工作时间和休息时间修改为读取配置文件方式，以及运行就启动倒计时以及自动隐藏主窗体。
 
 
