@@ -23,6 +23,8 @@ namespace Reminder
             //最小化主窗口
             this.ShowInTaskbar = false;
             this.WindowState = FormWindowState.Minimized;
+            this.Visible = false;
+
 
             // 在窗体加载时调用 Btn_start_Click 方法
             Btn_start_Click(null, EventArgs.Empty);
