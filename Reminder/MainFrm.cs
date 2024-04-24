@@ -20,6 +20,13 @@ namespace Reminder
         private void MainFrm_Load(object sender, EventArgs e)
         {
 
+            //最小化主窗口
+            this.ShowInTaskbar = false;
+            this.WindowState = FormWindowState.Minimized;
+
+            // 在窗体加载时调用 Btn_start_Click 方法
+            Btn_start_Click(null, EventArgs.Empty);
+            
         }
         public void SetWorkTimeValue(int value)
         {
