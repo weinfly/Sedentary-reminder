@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
 using System.Drawing;
 using System.IO;
@@ -87,7 +88,28 @@ namespace Reminder
         {
             timing();
         }
+        private int GetConfigValue(string key, int defaultValue)
+        {
+            int value = defaultValue;
+            string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.config");
+            ExeConfigurationFileMap configFileMap = new ExeConfigurationFileMap
+            {
+                ExeConfigFilename = configPath
+            };
 
+            Configuration config = ConfigurationManager.OpenMappedExeConfiguration(configFileMap, ConfigurationUserLevel.None);
+
+            if (config.AppSettings.Settings.AllKeys.Contains(key))
+            {
+                string valueString = config.AppSettings.Settings[key].Value;
+                if (!string.IsNullOrEmpty(valueString))
+                {
+                    int.TryParse(valueString, out value);
+                }
+            }
+
+            return value;
+        }
         private void timing()
         {
             if (rst_s > 0)
@@ -128,9 +150,13 @@ namespace Reminder
                         KeyboardBlocker.on();//解锁键盘
                     }
 
+                    //修改这里，默认使用配置文件的值重新进行计时，而不是原来代码里面的，使用主窗体界面文本框里的值。因为那里我经常会修改
                     if (rst_s == 0 && main_screen)
-                        {
-                        WorkFrm workFrm = new WorkFrm(wrk_m, rst_m2, input_flag);
+                    {
+                        int workTimeValue = GetConfigValue("WorkTimeValue", 45); // 默认值为 45 分钟
+                        int restTimeValue = GetConfigValue("RestTimeValue", 15); // 默认值为 15 分钟
+
+                        WorkFrm workFrm = new WorkFrm(workTimeValue, restTimeValue, input_flag);
                         workFrm.Show();
                     }
                     this.Close();
