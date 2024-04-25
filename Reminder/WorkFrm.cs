@@ -260,6 +260,14 @@ namespace Reminder
         private void btnRestart_Click(object sender, EventArgs e)
         {
             this.timerWrk.Enabled = !this.timerWrk.Enabled;
+            if (this.timerWrk.Enabled)
+            {
+                btnPause.Text = "暂停计时";
+            }
+            else
+            { btnPause.Text = "恢复计时";
+
+            }
             //WorkFrm wrkFrm = new WorkFrm(wrk_minutes, rst_minutes, input_flag);
             //wrkFrm.Show();
             //this.Close();
