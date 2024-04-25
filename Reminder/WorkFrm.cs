@@ -147,9 +147,11 @@ namespace Reminder
         {
             if (wrk_minutes==0&&wrk_seconds<=16)
             {
+                btnDelay.Visible = false;
+                btnPause.Visible = false;
                 this.BackColor = Color.Red;
                 lblWarn.ForeColor = Color.Yellow;
-                lblWarn.Text = "该起来站站了，久坐对身体不好！！";
+                lblWarn.Text = "该起来站站\r\n了，久坐对\r\n身体不好！";
                 int x = (System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Size.Width) / 2 - this.Width/2;
                 int y = (System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Size.Height) / 2 - this.Height/2;
                 Point p = new Point(x, y);

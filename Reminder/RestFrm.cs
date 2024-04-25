@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Configuration;
-using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows.Forms;
 
 namespace Reminder
@@ -151,7 +146,8 @@ namespace Reminder
                     }
 
                     //修改这里，默认使用配置文件的值重新进行计时，而不是原来代码里面的，使用主窗体界面文本框里的值。因为那里我经常会修改
-                    if (rst_s == 0 && main_screen)
+                    //if (rst_s == 0 && main_screen) 
+                    if (rst_s == 0) // 这里加&& main_screen的话，如果在倒计时的过程中关闭界面，则不会自动重新计时了。
                     {
                         int workTimeValue = GetConfigValue("WorkTimeValue", 45); // 默认值为 45 分钟
                         int restTimeValue = GetConfigValue("RestTimeValue", 15); // 默认值为 15 分钟

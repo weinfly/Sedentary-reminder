@@ -86,7 +86,7 @@
             this.lblText.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.lblText.AutoSize = true;
             this.lblText.Font = new System.Drawing.Font("楷体", 21.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblText.Location = new System.Drawing.Point(82, 205);
+            this.lblText.Location = new System.Drawing.Point(30, 205);
             this.lblText.Name = "lblText";
             this.lblText.Size = new System.Drawing.Size(757, 29);
             this.lblText.TabIndex = 3;
