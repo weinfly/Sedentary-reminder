@@ -89,6 +89,20 @@ namespace Reminder
 
             int wrkTime = (int)this.numWrkTime.Value;
             int rstTime = (int)this.numRstTime.Value;
+
+            if (WorkFrm.IsRunning())
+            {
+                // 如果有 WorkFrm 在运行,先关闭它
+                foreach (Form form in Application.OpenForms)
+                {
+                    if (form is WorkFrm)
+                    {
+                        form.Close();
+                        break;
+                    }
+                }
+            }
+            // 创建并显示新的 WorkFrm
             wrkFrm = new WorkFrm(wrkTime, rstTime, input_flag);
             wrkFrm.Show();
             //MainFrm.Visible = false;

@@ -19,6 +19,8 @@ namespace Reminder
         private bool left_flag;//鼠标左键是否点击
         private Point mouseoff;
         private RestFrm[] restFrms;
+        private static bool isRunning = false;
+
         public WorkFrm()
         {
             InitializeComponent();
@@ -38,9 +40,20 @@ namespace Reminder
             Point p = new Point(x, y);
             this.PointToScreen(p);
             this.Location = p;
-            
+            isRunning = true;
         }
-        
+
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+            isRunning = false;
+        }
+
+        public static bool IsRunning()
+        {
+            return isRunning;
+        }
+
         private void Form1_Load(object sender, EventArgs e)
         {
             wrk_seconds = 0; 
@@ -252,21 +265,5 @@ namespace Reminder
             //wrkFrm.Show();
             //this.Close();
         }
-        /* private void button1_Click(object sender, EventArgs e)
-{
-this.timerWrk.Enabled = !this.timerWrk.Enabled;
-}
-
-private void button2_Click(object sender, EventArgs e)
-{
-// 推迟
-WorkFrm workFrm = new WorkFrm(wrk_minutes+=10, rst_minutes, input_flag);
-workFrm.Show();
-this.Close();
-}
-* 
-* 
-* 
-*/
     }
 }
