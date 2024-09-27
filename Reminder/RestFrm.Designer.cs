@@ -13,9 +13,10 @@
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing)
             {
-                components.Dispose();
+                countdownTimer?.Stop();
+                countdownTimer?.Dispose();
             }
             base.Dispose(disposing);
         }
@@ -47,7 +48,7 @@
             // timerRst
             // 
             this.timerRst.Interval = 1000;
-            this.timerRst.Tick += new System.EventHandler(this.TimerRst_Tick);
+            ////this.timerRst.Tick += new System.EventHandler(this.TimerRst_Tick);
             // 
             // lbl_seconds
             // 
@@ -193,8 +194,7 @@
             this.Opacity = 0.75D;
             this.ShowInTaskbar = false;
             this.Text = "RestFrm";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.RestFrm_FormClosing);
-            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.RestFrm_FormClosed);
+            ////this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.RestFrm_FormClosed);
             this.Load += new System.EventHandler(this.RestFrm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

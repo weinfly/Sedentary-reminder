@@ -11,81 +11,109 @@ namespace Reminder
     {
         private int rst_m;
         private int wrk_m;
-        private int rst_m2;
         private bool input_flag;
-        int rst_s = 0;
+        private int rst_s;
+        private System.Windows.Forms.Timer countdownTimer;
         private bool main_screen;
+        private Point originalLocation;
 
-        public RestFrm()
-        {
-            InitializeComponent();
-        }
         public RestFrm(int rst_minutes, int wrk_minutes, bool input_flag, bool main_screen, Point location)
         {
             InitializeComponent();
             this.rst_m = rst_minutes;
+            this.rst_s = 0;
             this.wrk_m = wrk_minutes;
-            this.rst_m2 = rst_minutes;
             this.input_flag = input_flag;
-            // create the workFrm on the main screen, so use this to check
             this.main_screen = main_screen;
-            // Manual that the form will be created on the position depend on the location
+            this.originalLocation = location;
             this.StartPosition = FormStartPosition.Manual;
             this.Location = location;
+            // 绑定 FormClosing 事件处理程序
+            this.FormClosing += new FormClosingEventHandler(RestFrm_FormClosing);
         }
 
         private void RestFrm_Load(object sender, EventArgs e)
-        {           
+        {
+            SetupUI();
+            InitializeTimer();
+        }
+
+        private void SetupUI()
+        {
+            lblText.Text = input_flag
+                ? $"久坐对身体不好！您已久坐{wrk_m}分钟了，键盘和鼠标被锁定，禁止操作且无法退出，站起来活动下吧！"
+                : $"久坐对身体不好！您已久坐{wrk_m}分钟了，站起来活动下！Alt+F4 退出本界面。";
+
             if (input_flag)
             {
-                lblText.Text = "久坐对身体不好！您已久坐" + wrk_m.ToString() + "分钟了，键盘和鼠标被锁定，站起来活动下！";
-            }
-            else
-            {
-                lblText.Text = "久坐对身体不好！您已久坐" + wrk_m.ToString() + "分钟了，站起来活动下！Alt+F4 退出本界面。";
+                KeyboardBlocker.off();
             }
 
-
-            timerRst.Enabled = true;            
             this.TopMost = true;
-           
             this.WindowState = FormWindowState.Maximized;
             this.Opacity = 0.75;
-            if (input_flag)
-            {
-                KeyboardBlocker.off();//锁定键盘               
-            }
 
-            if (rst_s >= 10)
-            {
-                lbl_seconds.Text = rst_s.ToString();
-            }
-            else
-            {
-                lbl_seconds.Text = "0"+rst_s.ToString();
-            }
-
-
-            if (rst_m >= 10)
-            {
-                lbl_minutes.Text = rst_m.ToString();
-            }
-            else
-            {
-                lbl_minutes.Text = "0" + rst_m.ToString();
-            }
-            
-            
-
+            UpdateTimeLabels();
         }
 
-        private void TimerRst_Tick(object sender, EventArgs e)
+        private void InitializeTimer()
         {
-            timing();
+            countdownTimer = new System.Windows.Forms.Timer
+            {
+                Interval = 1000 // 1秒
+            };
+            countdownTimer.Tick += CountdownTimer_Tick;
+            countdownTimer.Start();
         }
+
+        private void CountdownTimer_Tick(object sender, EventArgs e)
+        {
+            if (rst_s > 0 || rst_m > 0)
+            {
+                if (rst_s == 0)
+                {
+                    rst_m--;
+                    rst_s = 59;
+                }
+                else
+                {
+                    rst_s--;
+                }
+                UpdateTimeLabels();
+                //System.Diagnostics.Debug.WriteLine($"倒计时中，rst_s的值为：{rst_s}");
+            }
+            else
+            {
+                //System.Diagnostics.Debug.WriteLine($"倒计时结束，rst_s的值为：{rst_s}");;
+                countdownTimer.Stop();
+                ShowRestEndMessage();
+            }
+        }
+
+        private void UpdateTimeLabels()
+        {
+            lbl_seconds.Text = rst_s.ToString("D2");
+            lbl_minutes.Text = rst_m.ToString("D2");
+        }
+
+        private void ShowRestEndMessage()
+        {
+            DialogResult result = MessageBox.Show("站立时间结束，请坐下继续搬砖吧！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            if (result == DialogResult.OK)
+            {
+                int workTimeValue = GetConfigValue("WorkTimeValue", 45);
+                int restTimeValue = GetConfigValue("RestTimeValue", 15);
+
+                WorkFrm workFrm = new WorkFrm(workTimeValue, restTimeValue, input_flag);
+                workFrm.Show();
+
+                this.Close(); // 关闭当前的 RestFrm 窗体
+            }
+        }
+
         private int GetConfigValue(string key, int defaultValue)
         {
-            int value = defaultValue;
             string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.config");
             ExeConfigurationFileMap configFileMap = new ExeConfigurationFileMap
             {
@@ -97,83 +125,35 @@ namespace Reminder
             if (config.AppSettings.Settings.AllKeys.Contains(key))
             {
                 string valueString = config.AppSettings.Settings[key].Value;
-                if (!string.IsNullOrEmpty(valueString))
+                if (int.TryParse(valueString, out int value))
                 {
-                    int.TryParse(valueString, out value);
+                    return value;
                 }
             }
 
-            return value;
-        }
-        private void timing()
-        {
-            if (rst_s > 0)
-            {
-                rst_s = rst_s - 1;
-                if (rst_s >= 10)
-                {
-                    lbl_seconds.Text = rst_s.ToString();
-                }
-                else
-                {
-                    lbl_seconds.Text = "0"+rst_s.ToString();
-                }
-                
-            }
-            else //秒=0时，分钟-1
-            {
-                timerRst.Enabled = false;
-                rst_m--;
-                if (rst_m>=10) {
-                    lbl_minutes.Text = rst_m.ToString();
-                }
-                else
-                {
-                    lbl_minutes.Text = "0"+rst_m.ToString();
-                }
-                
-                if (rst_m > -1) //若分钟不为0，秒回到60，继续递归
-                {
-                    timerRst.Enabled = true;
-                    rst_s = 59;
-                    timing();
-                }
-                else
-                {                    
-                    if (input_flag)
-                    {                       
-                        KeyboardBlocker.on();//解锁键盘
-                    }
-
-                    //修改这里，默认使用配置文件的值重新进行计时，而不是原来代码里面的，使用主窗体界面文本框里的值。因为那里我经常会修改
-                    //if (rst_s == 0 && main_screen) 
-                    if (rst_s == 0) // 这里加&& main_screen的话，如果在倒计时的过程中关闭界面，则不会自动重新计时了。
-                    {
-                        int workTimeValue = GetConfigValue("WorkTimeValue", 45); // 默认值为 45 分钟
-                        int restTimeValue = GetConfigValue("RestTimeValue", 15); // 默认值为 15 分钟
-
-                        WorkFrm workFrm = new WorkFrm(workTimeValue, restTimeValue, input_flag);
-                        workFrm.Show();
-                    }
-                    this.Close();
-                }
-            }
+            return defaultValue;
         }
 
-        private void RestFrm_FormClosed(object sender, FormClosedEventArgs e)
-        {
 
-        }
 
         private void RestFrm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            //WorkFrm workFrm = new WorkFrm(wrk_m, rst_m2, input_flag);
-           // workFrm.Show();
+            if (input_flag)
+            {
+                KeyboardBlocker.on();
+            }
+            // 检查是否是用户手动关闭休息遮罩窗体
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                e.Cancel = true; // 取消关闭操作
+                this.Hide(); // 隐藏窗体
+                //System.Diagnostics.Debug.WriteLine("RestFrm hidden");
+            }
         }
 
+        // 添加这个空方法来解决设计器文件中的错误
         private void lblText_Click(object sender, EventArgs e)
         {
-
         }
     }
 }

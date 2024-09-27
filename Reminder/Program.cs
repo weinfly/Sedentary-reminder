@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Timers;
 using System.Windows.Forms;
 
 namespace Reminder
@@ -14,6 +15,16 @@ namespace Reminder
         [STAThread]
         static void Main()
         {
+            bool autoExitEnabled = Convert.ToBoolean(ConfigurationManager.AppSettings["AutoExitEnabled"]);
+            int exitHour = Convert.ToInt32(ConfigurationManager.AppSettings["ExitHour"]);
+
+            if (autoExitEnabled)
+            {
+                System.Timers.Timer timer = new System.Timers.Timer(60000); // 1 minute interval
+                timer.Elapsed += CheckAndExit;
+                timer.Start();
+            }
+
             bool ExisFlag = false;
             System.Diagnostics.Process currentProccess = System.Diagnostics.Process.GetCurrentProcess();
             System.Diagnostics.Process[] currentProccessArray = System.Diagnostics.Process.GetProcesses();
@@ -80,6 +91,16 @@ namespace Reminder
                 }
             }
             return restTimeValue;
+        }
+        private static void CheckAndExit(object sender, ElapsedEventArgs e)
+        {
+            int currentHour = DateTime.Now.Hour;
+            int exitHour = Convert.ToInt32(ConfigurationManager.AppSettings["ExitHour"]);
+
+            if (currentHour >= exitHour)
+            {
+                Environment.Exit(0);   ///定时退出程序
+            }
         }
     }
 }
