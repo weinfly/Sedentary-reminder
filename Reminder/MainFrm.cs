@@ -53,12 +53,13 @@ namespace Reminder
         {
             //最小化主窗口
             //这里有问题，只能最小化，visible和hide都无法隐藏，暂时无法解决
-            this.ShowInTaskbar = false;
             this.WindowState = FormWindowState.Minimized;
-            this.Visible = false;
+            this.ShowInTaskbar = false;
+            //this.Visible = false;
+            this.Hide();
 
             // 在窗体加载时调用 Btn_start_Click 方法
-            Btn_start_Click(null, EventArgs.Empty);
+            First_Start(null, EventArgs.Empty); 
 
             bool autoStart = GetQuickFromFolder(systemStartPath, appAllPath).Count > 0;
             autoStartMenuItem.Checked = autoStart;
@@ -73,7 +74,29 @@ namespace Reminder
         {
             numRstTime.Value = value;
         }
+        private void First_Start(object sender, EventArgs e)
+        {
 
+            int wrkTime = (int)this.numWrkTime.Value;
+            int rstTime = (int)this.numRstTime.Value;
+
+            if (WorkFrm.IsRunning())
+            {
+                // 如果有 WorkFrm 在运行,先关闭它
+                foreach (Form form in Application.OpenForms)
+                {
+                    if (form is WorkFrm)
+                    {
+                        form.Close();
+                        break;
+                    }
+                }
+            }
+            // 创建并显示新的 WorkFrm
+            wrkFrm = new WorkFrm(wrkTime, rstTime);
+            wrkFrm.Show();
+            this.Visible = false;
+        }
         private void Btn_start_Click(object sender, EventArgs e)
         {
             bool input_flag;
@@ -133,9 +156,19 @@ namespace Reminder
             e.Cancel = true;
             //最小化主窗口
             this.WindowState = FormWindowState.Minimized;
-            this.Visible = false;
+            //this.Visible = false;
             //不在系统任务栏显示主窗口图标
             this.ShowInTaskbar = false;
+            this.Hide();
+            
+            // 关闭所有 WorkFrm 窗口
+            foreach (Form form in Application.OpenForms)
+            {
+                if (form is WorkFrm)
+                {
+                    form.Close();
+                }
+            }
         }
 
         private void 退出ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -200,7 +233,7 @@ namespace Reminder
                 shortcut.Description = description;
                 shortcut.IconLocation = "ICO2.ico";
                 shortcut.Save();
-                MessageBox.Show("设置开机启动成功" , "info", MessageBoxButtons.OK);
+                MessageBox.Show("设置开机启动成功", "info", MessageBoxButtons.OK);
                 return true;
             }
             catch (Exception ex)

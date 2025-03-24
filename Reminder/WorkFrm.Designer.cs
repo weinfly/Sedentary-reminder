@@ -1,4 +1,4 @@
-﻿namespace Reminder
+﻿﻿namespace Reminder
 {
     partial class WorkFrm
     {
@@ -116,7 +116,6 @@
             this.lblWarn.Size = new System.Drawing.Size(93, 20);
             this.lblWarn.TabIndex = 7;
             this.lblWarn.Text = "注意坐姿";
-            this.lblWarn.Click += new System.EventHandler(this.Label1_Click);
             this.lblWarn.MouseDown += new System.Windows.Forms.MouseEventHandler(this.WorkFrm_MouseDown);
             this.lblWarn.MouseMove += new System.Windows.Forms.MouseEventHandler(this.WorkFrm_MouseMove);
             this.lblWarn.MouseUp += new System.Windows.Forms.MouseEventHandler(this.WorkFrm_MouseUp);
@@ -183,4 +182,3 @@
         private System.Windows.Forms.Button btnPause;
     }
 }
-
