@@ -93,8 +93,11 @@ namespace Reminder
 
                 var existingRestForm = Application.OpenForms.Cast<Form>()
                     .FirstOrDefault(form => form is RestFrm);
+                // 检查是否已经存在MainFrm
+                var existingMainForm = Application.OpenForms.Cast<Form>()
+                    .FirstOrDefault(form => form is MainFrm);
 
-                // 然后根据需要进行处理,这里因为已经只改成了整点检查，因此只判断workFrm即可
+                // 这里因为已经只改成了整点检查，因此只判断workFrm即可
                 // if (existingWorkForm == null && existingRestForm == null)
                 if (existingWorkForm == null)
                 {
@@ -111,10 +114,26 @@ namespace Reminder
                     Application.SetCompatibleTextRenderingDefault(false);
                     int workTimeValue = GetConfigValue(config, "WorkTimeValue", 45);
                     int restTimeValue = GetConfigValue(config, "RestTimeValue", 15);
-                    MainFrm mainForm = new MainFrm();
-                    mainForm.SetWorkTimeValue(workTimeValue);
-                    mainForm.SetRestTimeValue(restTimeValue);
-                    Application.Run(mainForm);
+
+                    // 这里是定时启动的，因此不需要判断mainfrm的存在与否的，直接启动workfrm即可
+                    WorkFrm workFrm = new WorkFrm(workTimeValue, restTimeValue);
+                    workFrm.Show();
+                    /* // 如果MainFrm不存在，则创建它
+                    if (existingMainForm == null)
+                    {
+                        Application.EnableVisualStyles();
+                        Application.SetCompatibleTextRenderingDefault(false);
+                        MainFrm mainForm = new MainFrm();
+                        mainForm.SetWorkTimeValue(workTimeValue);
+                        mainForm.SetRestTimeValue(restTimeValue);
+                        Application.Run(mainForm);
+                    }
+                    else
+                    {
+                        // 如果MainFrm存在，直接启动WorkFrm
+                        WorkFrm workFrm = new WorkFrm(workTimeValue, restTimeValue);
+                        workFrm.Show();
+                    }*/
                 }
                 else
                 {

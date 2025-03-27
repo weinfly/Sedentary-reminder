@@ -43,7 +43,7 @@ namespace Reminder
         {
             lblText.Text = input_flag
                 ? $"久坐对身体不好！您已久坐{wrk_m}分钟了，键盘和鼠标被锁定，禁止操作且无法退出，站起来活动下吧！"
-                : $"久坐对身体不好！您已久坐{wrk_m}分钟了，站起来活动下！Alt+F4 退出本界面。";
+                : $"久坐对身体不好！您已久坐{wrk_m}分钟了，站起来活动下，也别忘了喝水哦！Alt+F4 退出本界面。";
 
             if (input_flag)
             {
@@ -158,67 +158,67 @@ namespace Reminder
                 }
             }
         }
-       /* private void ShowRestEndMessage()
-        {
-            // 检查消息框是否正在显示
-            if (isMessageShowing)
-            {
-                return;
-            }
+        /* private void ShowRestEndMessage()
+         {
+             // 检查消息框是否正在显示
+             if (isMessageShowing)
+             {
+                 return;
+             }
 
-            // 设置消息框正在显示
-            isMessageShowing = true;
+             // 设置消息框正在显示
+             isMessageShowing = true;
 
-            // 读取 app.config 中的 RestEndMessageScreen 设置项
-            int restEndMessageScreen = GetConfigValue("RestEndMessageScreen", 0);
+             // 读取 app.config 中的 RestEndMessageScreen 设置项
+             int restEndMessageScreen = GetConfigValue("RestEndMessageScreen", 0);
 
-            // 获取所有显示器
-            Screen[] screens = Screen.AllScreens;
+             // 获取所有显示器
+             Screen[] screens = Screen.AllScreens;
 
-            // 确定要显示消息框的显示器
-            Screen targetScreen = restEndMessageScreen >= 0 && restEndMessageScreen < screens.Length
-                ? screens[restEndMessageScreen]
-                : Screen.PrimaryScreen;
+             // 确定要显示消息框的显示器
+             Screen targetScreen = restEndMessageScreen >= 0 && restEndMessageScreen < screens.Length
+                 ? screens[restEndMessageScreen]
+                 : Screen.PrimaryScreen;
 
-            // 创建一个临时窗体，用于在指定的显示器上显示消息框
-            Form messageForm = new Form
-            {
-                StartPosition = FormStartPosition.Manual,
-                Location = targetScreen.Bounds.Location,
-                Size = new Size(300, 200),
-                FormBorderStyle = FormBorderStyle.None,
-                TopMost = true
-            };
+             // 创建一个临时窗体，用于在指定的显示器上显示消息框
+             Form messageForm = new Form
+             {
+                 StartPosition = FormStartPosition.Manual,
+                 Location = targetScreen.Bounds.Location,
+                 Size = new Size(300, 200),
+                 FormBorderStyle = FormBorderStyle.None,
+                 TopMost = true
+             };
 
-            try
-            {
-                // 显示消息框
-                DialogResult result = MessageBox.Show(messageForm, "站立时间结束，请坐下继续搬砖吧！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+             try
+             {
+                 // 显示消息框
+                 DialogResult result = MessageBox.Show(messageForm, "站立时间结束，请坐下继续搬砖吧！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                if (result == DialogResult.OK)
-                {
-                    int workTimeValue = GetConfigValue("WorkTimeValue", 45);
-                    int restTimeValue = GetConfigValue("RestTimeValue", 15);
+                 if (result == DialogResult.OK)
+                 {
+                     int workTimeValue = GetConfigValue("WorkTimeValue", 45);
+                     int restTimeValue = GetConfigValue("RestTimeValue", 15);
 
-                    WorkFrm workFrm = new WorkFrm(workTimeValue, restTimeValue);
-                    workFrm.Show();
+                     WorkFrm workFrm = new WorkFrm(workTimeValue, restTimeValue);
+                     workFrm.Show();
 
-                    // 关闭所有 RestFrm 实例
-                    foreach (Form openForm in Application.OpenForms)
-                    {
-                        if (openForm is RestFrm)
-                        {
-                            openForm.Close();
-                        }
-                    }
-                }
-            }
-            finally
-            {
-                // 设置消息框不再显示
-                isMessageShowing = false;
-            }
-        }*/
+                     // 关闭所有 RestFrm 实例
+                     foreach (Form openForm in Application.OpenForms)
+                     {
+                         if (openForm is RestFrm)
+                         {
+                             openForm.Close();
+                         }
+                     }
+                 }
+             }
+             finally
+             {
+                 // 设置消息框不再显示
+                 isMessageShowing = false;
+             }
+         }*/
 
         private int GetConfigValue(string key, int defaultValue)
         {

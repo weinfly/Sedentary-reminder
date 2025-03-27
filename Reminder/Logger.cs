@@ -13,7 +13,7 @@ namespace Reminder
         {
             string logMessage = $"{DateTime.Now}: {message}";
             // 输出到控制台
-            Console.WriteLine(logMessage);
+            // Console.WriteLine(logMessage);
             // 或者写入文件
             File.AppendAllText("log.txt", logMessage + Environment.NewLine);
         }

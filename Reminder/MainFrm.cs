@@ -58,8 +58,8 @@ namespace Reminder
             //this.Visible = false;
             this.Hide();
 
-            // 在窗体加载时调用 Btn_start_Click 方法
-            First_Start(null, EventArgs.Empty); 
+            // 在窗体加载时调用 First_Start 方法
+            First_Start(null, EventArgs.Empty);
 
             bool autoStart = GetQuickFromFolder(systemStartPath, appAllPath).Count > 0;
             autoStartMenuItem.Checked = autoStart;
@@ -160,7 +160,7 @@ namespace Reminder
             //不在系统任务栏显示主窗口图标
             this.ShowInTaskbar = false;
             this.Hide();
-            
+
             // 关闭所有 WorkFrm 窗口
             foreach (Form form in Application.OpenForms)
             {
