@@ -18,7 +18,7 @@ namespace Reminder
         [STAThread]
         static void Main()
         {
-            Logger.Log($"配置文件路径: {AppDomain.CurrentDomain.SetupInformation.ConfigurationFile}");
+            //Logger.Log($"配置文件路径: {AppDomain.CurrentDomain.SetupInformation.ConfigurationFile}");
 
             if (!mutex.WaitOne(TimeSpan.Zero, true))
             {
@@ -74,10 +74,10 @@ namespace Reminder
         private static List<int> GetConfigValues(Configuration config, string key)
         {
             var values = config.AppSettings.Settings[key]?.Value;
-            Logger.Log($"正在读取配置项 {key}，值为: {values ?? "null"}");
+            //Logger.Log($"正在读取配置项 {key}，值为: {values ?? "null"}");
             if (string.IsNullOrEmpty(values))
             {
-                Logger.Log($"配置项 {key} 为空，返回空列表");
+                //Logger.Log($"配置项 {key} 为空，返回空列表");
                 return new List<int>();
             }
 
@@ -86,19 +86,91 @@ namespace Reminder
                          .Where(v => v >= 0)
                          .ToList();
 
-            Logger.Log($"配置项 {key} 解析结果为: {string.Join(", ", parsedValues)}");
+            //Logger.Log($"配置项 {key} 解析结果为: {string.Join(", ", parsedValues)}");
             return parsedValues;
         }
-
+        // 发现在自动启动的时候，日志记录了是存在workfrm窗口的，因此没有启动新的窗口，这里改成有存在也关闭。
         private static void CheckAndStartWorkFrm(Configuration config)
         {
             var startHours = GetConfigValues(config, "AutoStartHours");
             if (startHours.Count == 0)
             {
-                Logger.Log("警告：AutoStartHours配置为空，使用默认值[9,13]");
                 startHours = new List<int> { 9, 13 }; // 默认值
             }
-            Logger.Log($"正在进行定期启动检查，startHours为{string.Join(", ", startHours)}，当前时间：{DateTime.Now}");
+            if (startHours.Contains(DateTime.Now.Hour) && (DateTime.Now.Minute == 0 || DateTime.Now.Minute == 1))
+            {
+                Logger.Log($"尝试启动WorkFrm倒计时窗口，当前时间：{DateTime.Now}");
+
+                var existingWorkForm = Application.OpenForms.Cast<Form>()
+                    .FirstOrDefault(form => form is WorkFrm);
+
+                var existingRestForm = Application.OpenForms.Cast<Form>()
+                    .FirstOrDefault(form => form is RestFrm);
+
+                // 如果WorkFrm窗口存在，先关闭
+                if (existingWorkForm != null)
+                {
+                    Logger.Log("检测到WorkFrm窗口存在，正在关闭");
+                    try
+                    {
+                        existingWorkForm.Invoke((Action)(() =>
+                        {
+                            existingWorkForm.Close();
+                        }));
+                        Logger.Log("WorkFrm窗口关闭成功");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log($"关闭WorkFrm窗口失败：{ex.Message}");
+                        return; // 如果关闭失败，直接返回
+                    }
+                }
+
+                // 如果RestFrm窗口存在，也关闭
+                if (existingRestForm != null)
+                {
+                    Logger.Log("检测到RestFrm休息窗口存在，正在关闭");
+                    try
+                    {
+                        existingRestForm.Invoke((Action)(() =>
+                        {
+                            existingRestForm.Close();
+                        }));
+                        Logger.Log("休息RestFrm窗口关闭成功");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log($"关闭RestFrm休息窗口失败：{ex.Message}");
+                    }
+                }
+
+                // 启动新的WorkFrm窗口
+                try
+                {
+                    Application.EnableVisualStyles();
+                    Application.SetCompatibleTextRenderingDefault(false);
+                    int workTimeValue = GetConfigValue(config, "WorkTimeValue", 45);
+                    int restTimeValue = GetConfigValue(config, "RestTimeValue", 15);
+
+                    WorkFrm workFrm = new WorkFrm(workTimeValue, restTimeValue);
+                    workFrm.Show();
+                    Logger.Log("WorkFrm倒计时窗口启动成功");
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log($"WorkFrm倒计时窗口启动失败：{ex.Message}");
+                }
+            }
+        }
+        private static void CheckAndStartWorkFrm_old(Configuration config)
+        {
+            var startHours = GetConfigValues(config, "AutoStartHours");
+            if (startHours.Count == 0)
+            {
+                //Logger.Log("警告：AutoStartHours配置为空，使用默认值[9,13]");
+                startHours = new List<int> { 9, 13 }; // 默认值
+            }
+            //Logger.Log($"正在进行定期启动检查，startHours为{string.Join(", ", startHours)}，当前时间：{DateTime.Now}");
             if (startHours.Contains(DateTime.Now.Hour) && (DateTime.Now.Minute == 0 || DateTime.Now.Minute == 1))
             {
                 Logger.Log($"尝试启动WorkFrm倒计时窗口，当前时间：{DateTime.Now}");
@@ -157,10 +229,10 @@ namespace Reminder
             var stopHours = GetConfigValues(config, "AutoStopHours");
             if (stopHours.Count == 0)
             {
-                Logger.Log("警告：AutoStopHours配置为空，使用默认值[12,18]");
+                //Logger.Log("警告：AutoStopHours配置为空，使用默认值[12,18]");
                 stopHours = new List<int> { 12, 18 }; // 默认值
             }
-            Logger.Log($"正在进行定期停止检查，stopHours为{string.Join(", ", stopHours)}，当前时间：{DateTime.Now}");
+            //Logger.Log($"正在进行定期停止检查，stopHours为{string.Join(", ", stopHours)}，当前时间：{DateTime.Now}");
             if (stopHours.Contains(DateTime.Now.Hour))
             {
                 Logger.Log($"尝试关闭WorkFrm倒计时窗口，当前时间：{DateTime.Now}");
