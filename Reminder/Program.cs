@@ -229,10 +229,8 @@ namespace Reminder
             var stopHours = GetConfigValues(config, "AutoStopHours");
             if (stopHours.Count == 0)
             {
-                //Logger.Log("警告：AutoStopHours配置为空，使用默认值[12,18]");
                 stopHours = new List<int> { 12, 18 }; // 默认值
             }
-            //Logger.Log($"正在进行定期停止检查，stopHours为{string.Join(", ", stopHours)}，当前时间：{DateTime.Now}");
             if (stopHours.Contains(DateTime.Now.Hour))
             {
                 Logger.Log($"尝试关闭WorkFrm倒计时窗口，当前时间：{DateTime.Now}");

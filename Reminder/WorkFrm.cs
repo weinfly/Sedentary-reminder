@@ -31,74 +31,104 @@ namespace Reminder
         //定义一个构造函数，接受前一个窗体传来的参数
         public WorkFrm(int wrk_minutes, int rst_minutes)
         {
-            InitializeComponent();
 
-            // 获取当前时间
-            DateTime now = DateTime.Now;
-
-            // 根据配置文件的WorkTimeValue，计算下一个时间点  20250219，将第一次启动时的记时，改成根据配置文件，而不是固定的45
-            // int workTimeValue = int.Parse(ConfigurationManager.AppSettings["WorkTimeValue"]);
-            int workTimeValue = GetConfigValue("WorkTimeValue", 45);
-            int restTimeValue = GetConfigValue("RestTimeValue", 15);
-
-            DateTime nextBreakTime;
-            if (now.Minute < workTimeValue)
+            try
             {
-                nextBreakTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, workTimeValue, 0);
+                // 20250402，添加异常捕获，以便记录异常日志
+
+                InitializeComponent();
+
+                // 获取当前时间
+                DateTime now = DateTime.Now;
+
+                // 根据配置文件的WorkTimeValue，计算下一个时间点  20250219，将第一次启动时的记时，改成根据配置文件，而不是固定的45
+                // int workTimeValue = int.Parse(ConfigurationManager.AppSettings["WorkTimeValue"]);
+                int workTimeValue = GetConfigValue("WorkTimeValue", 45);
+                int restTimeValue = GetConfigValue("RestTimeValue", 15);
+
+                DateTime nextBreakTime;
+                if (now.Minute < workTimeValue)
+                {
+                    nextBreakTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, workTimeValue, 0);
+                }
+                else
+                {
+                    nextBreakTime = new DateTime(now.Year, now.Month, now.Day, now.Hour + 1, workTimeValue, 0);
+                }
+
+                // 计算时间差，精确到毫秒
+                TimeSpan timeDiff = nextBreakTime - now;
+                double totalMilliseconds = timeDiff.TotalMilliseconds;
+                this.wrk_minutes = (int)(totalMilliseconds / 60000);
+                this.wrk_seconds = (int)((totalMilliseconds % 60000) / 1000);
+                this.rst_minutes = rst_minutes;
+                this.wrk_m = wrk_minutes;
+                this.input_flag = false;
+
+                //int x = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Size.Width - 160;
+                //int y = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Size.Height - 90;
+                // 读取 WorkFormScreen 配置项，若不存在则默认显示在第一个屏幕
+                int screenIndex = GetConfigValue("WorkFormScreen", 0);
+                Screen[] screens = Screen.AllScreens;
+
+                // 确保屏幕索引在有效范围内
+                if (screenIndex < 0 || screenIndex >= screens.Length)
+                {
+                    screenIndex = 0;
+                }
+
+                Screen selectedScreen = screens[screenIndex];
+                // 读取配置文件中的偏移量
+                int offsetX = GetConfigValue("WorkFormOffsetX", 160);
+                int offsetY = GetConfigValue("WorkFormOffsetY", 90);
+                // 计算窗体的位置   
+                int x = selectedScreen.WorkingArea.Right - offsetX;
+                int y = selectedScreen.WorkingArea.Bottom - offsetY;
+                Point p = new Point(x, y);
+                this.PointToScreen(p);
+                this.Location = p;
+                isRunning = true;
             }
-            else
+            catch (Exception ex)
             {
-                nextBreakTime = new DateTime(now.Year, now.Month, now.Day, now.Hour + 1, workTimeValue, 0);
+                // 记录异常日志
+                string logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt");
+                string logMessage = $"[{DateTime.Now}] 构造函数异常: {ex.Message}\nStackTrace: {ex.StackTrace}\n\n";
+                File.AppendAllText(logPath, logMessage);
+
+                // 重新抛出异常以保持原有行为
+                throw;
             }
-
-            // 计算时间差，精确到毫秒
-            TimeSpan timeDiff = nextBreakTime - now;
-            double totalMilliseconds = timeDiff.TotalMilliseconds;
-            this.wrk_minutes = (int)(totalMilliseconds / 60000);
-            this.wrk_seconds = (int)((totalMilliseconds % 60000) / 1000);
-            this.rst_minutes = rst_minutes;
-            this.wrk_m = wrk_minutes;
-            this.input_flag = false;
-
-            //int x = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Size.Width - 160;
-            //int y = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Size.Height - 90;
-            // 读取 WorkFormScreen 配置项，若不存在则默认显示在第一个屏幕
-            int screenIndex = GetConfigValue("WorkFormScreen", 0);
-            Screen[] screens = Screen.AllScreens;
-
-            // 确保屏幕索引在有效范围内
-            if (screenIndex < 0 || screenIndex >= screens.Length)
-            {
-                screenIndex = 0;
-            }
-
-            Screen selectedScreen = screens[screenIndex];
-            // 读取配置文件中的偏移量
-            int offsetX = GetConfigValue("WorkFormOffsetX", 160);
-            int offsetY = GetConfigValue("WorkFormOffsetY", 90);
-            // 计算窗体的位置   
-            int x = selectedScreen.WorkingArea.Right - offsetX;
-            int y = selectedScreen.WorkingArea.Bottom - offsetY;
-            Point p = new Point(x, y);
-            this.PointToScreen(p);
-            this.Location = p;
-            isRunning = true;
         }
         public WorkFrm(int wrk_minutes, int rst_minutes, bool input_flag)
         {
-            InitializeComponent();
-            this.wrk_minutes = wrk_minutes;
-            this.rst_minutes = rst_minutes;
-            this.wrk_m = wrk_minutes;
-            this.input_flag = input_flag;
-            bool hideWindow = ConfigurationManager.AppSettings["ShowTimerWindow"] == "1";
+            // 20250402，添加异常捕获，以便记录异常日志
+            try
+            {
+                InitializeComponent();
+                this.wrk_minutes = wrk_minutes;
+                this.rst_minutes = rst_minutes;
+                this.wrk_m = wrk_minutes;
+                this.input_flag = input_flag;
+                // bool hideWindow = ConfigurationManager.AppSettings["ShowTimerWindow"] == "1";
 
-            int x = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Size.Width - 160;
-            int y = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Size.Height - 90;
-            Point p = new Point(x, y);
-            this.PointToScreen(p);
-            this.Location = p;
-            isRunning = true;
+                int x = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Size.Width - 160;
+                int y = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Size.Height - 90;
+                Point p = new Point(x, y);
+                this.PointToScreen(p);
+                this.Location = p;
+                isRunning = true;
+            }
+            catch (Exception ex)
+            {
+                // 记录异常日志
+                string logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt");
+                string logMessage = $"[{DateTime.Now}] 构造函数异常: {ex.Message}\nStackTrace: {ex.StackTrace}\n\n";
+                File.AppendAllText(logPath, logMessage);
+
+                // 重新抛出异常以保持原有行为
+                throw;
+            }
         }
 
         protected override void OnClosed(EventArgs e)
