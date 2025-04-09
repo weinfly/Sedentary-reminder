@@ -92,9 +92,9 @@ namespace Reminder
             catch (Exception ex)
             {
                 // 记录异常日志
-                string logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt");
-                string logMessage = $"[{DateTime.Now}] 构造函数异常: {ex.Message}\nStackTrace: {ex.StackTrace}\n\n";
-                File.AppendAllText(logPath, logMessage);
+                LogException(ex, "构造函数异常");
+
+
 
                 // 重新抛出异常以保持原有行为
                 throw;
@@ -112,8 +112,23 @@ namespace Reminder
                 this.input_flag = input_flag;
                 // bool hideWindow = ConfigurationManager.AppSettings["ShowTimerWindow"] == "1";
 
-                int x = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Size.Width - 160;
-                int y = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Size.Height - 90;
+                // 使用与第一个构造函数相同的多屏幕配置逻辑
+                int screenIndex = GetConfigValue("WorkFormScreen", 0);
+                Screen[] screens = Screen.AllScreens;
+
+                // 确保屏幕索引在有效范围内
+                if (screenIndex < 0 || screenIndex >= screens.Length)
+                {
+                    screenIndex = 0;
+                }
+
+                Screen selectedScreen = screens[screenIndex];
+                // 读取配置文件中的偏移量
+                int offsetX = GetConfigValue("WorkFormOffsetX", 160);
+                int offsetY = GetConfigValue("WorkFormOffsetY", 90);
+                // 计算窗体的位置   
+                int x = selectedScreen.WorkingArea.Right - offsetX;
+                int y = selectedScreen.WorkingArea.Bottom - offsetY;
                 Point p = new Point(x, y);
                 this.PointToScreen(p);
                 this.Location = p;
@@ -122,9 +137,9 @@ namespace Reminder
             catch (Exception ex)
             {
                 // 记录异常日志
-                string logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt");
-                string logMessage = $"[{DateTime.Now}] 构造函数异常: {ex.Message}\nStackTrace: {ex.StackTrace}\n\n";
-                File.AppendAllText(logPath, logMessage);
+                LogException(ex, "构造函数异常");
+
+
 
                 // 重新抛出异常以保持原有行为
                 throw;
@@ -208,7 +223,7 @@ namespace Reminder
             catch (Exception ex)
             {
                 // 记录日志或处理异常
-                Console.WriteLine($"Timer error: {ex.Message}");
+                LogException(ex, "Timer error");
                 timerWrk.Stop();
             }
         }
@@ -324,6 +339,19 @@ namespace Reminder
                 btnPause.Text = "恢复计时";
 
             }
+        }
+
+        /// <summary>
+        /// 统一的异常日志记录方法
+        /// </summary>
+        private void LogException(Exception ex, string context)
+        {
+            string logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt");
+            string logMessage = $"[{DateTime.Now}] {context}: {ex.Message}\nStackTrace: {ex.StackTrace}\n\n";
+            File.AppendAllText(logPath, logMessage);
+
+            // 同时输出到控制台以便调试
+            Console.WriteLine($"{context}: {ex.Message}");
         }
     }
 }
