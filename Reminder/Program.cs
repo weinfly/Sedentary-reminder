@@ -14,6 +14,9 @@ namespace Reminder
         private static System.Timers.Timer startTimer;
         private static System.Timers.Timer stopTimer;
         private static System.Timers.Timer checkTimer;
+        // 添加静态引用以防止窗口被垃圾回收
+        private static WorkFrm activeWorkFrm;
+        private static RestFrm activeRestFrm;
 
         [STAThread]
         static void Main()
@@ -97,64 +100,41 @@ namespace Reminder
             {
                 startHours = new List<int> { 9, 13 }; // 默认值
             }
-            if (startHours.Contains(DateTime.Now.Hour) && (DateTime.Now.Minute == 0 || DateTime.Now.Minute == 1))
+            if (startHours.Contains(DateTime.Now.Hour) && (DateTime.Now.Minute == 0))
             {
-                Logger.Log($"尝试启动WorkFrm倒计时窗口，当前时间：{DateTime.Now}");
-
-                var existingWorkForm = Application.OpenForms.Cast<Form>()
-                    .FirstOrDefault(form => form is WorkFrm);
-
-                var existingRestForm = Application.OpenForms.Cast<Form>()
-                    .FirstOrDefault(form => form is RestFrm);
-
-                // 如果WorkFrm窗口存在，先关闭
-                if (existingWorkForm != null)
+                // 关闭所有 WorkFrm 和RestFrm窗口
+                foreach (Form form in Application.OpenForms)
                 {
-                    Logger.Log("检测到WorkFrm窗口存在，正在关闭");
-                    try
+                    if (form is WorkFrm || form is RestFrm)
                     {
-                        existingWorkForm.Invoke((Action)(() =>
-                        {
-                            existingWorkForm.Close();
-                        }));
-                        Logger.Log("WorkFrm窗口关闭成功");
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Log($"关闭WorkFrm窗口失败：{ex.Message}");
-                        return; // 如果关闭失败，直接返回
-                    }
-                }
-
-                // 如果RestFrm窗口存在，也关闭
-                if (existingRestForm != null)
-                {
-                    Logger.Log("检测到RestFrm休息窗口存在，正在关闭");
-                    try
-                    {
-                        existingRestForm.Invoke((Action)(() =>
-                        {
-                            existingRestForm.Close();
-                        }));
-                        Logger.Log("休息RestFrm窗口关闭成功");
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Log($"关闭RestFrm休息窗口失败：{ex.Message}");
+                        form.Dispose();
+                        Logger.Log($"已关闭：{form}--{DateTime.Now}");
                     }
                 }
 
                 // 启动新的WorkFrm窗口
                 try
                 {
-                    Application.EnableVisualStyles();
-                    Application.SetCompatibleTextRenderingDefault(false);
+                    Logger.Log($"尝试启动WorkFrm倒计时窗口，当前时间：{DateTime.Now}");
                     int workTimeValue = GetConfigValue(config, "WorkTimeValue", 45);
                     int restTimeValue = GetConfigValue(config, "RestTimeValue", 15);
 
-                    WorkFrm workFrm = new WorkFrm(workTimeValue, restTimeValue);
-                    workFrm.Show();
+                    // 创建新窗口并保存引用
+                    activeWorkFrm = new WorkFrm(workTimeValue, restTimeValue);
+                    // 设置窗口始终在最前面
+                    activeWorkFrm.TopMost = true;
+                    // 显示窗口
+                    activeWorkFrm.Show();
+                    // 激活窗口，确保它获得焦点
+                    activeWorkFrm.Activate();
                     Logger.Log("WorkFrm倒计时窗口启动成功");
+
+                    // 添加窗口关闭事件处理，记录窗口关闭情况
+                    activeWorkFrm.FormClosed += (sender, e) =>
+                    {
+                        Logger.Log($"WorkFrm窗口被关闭，关闭时间：{DateTime.Now}");
+                        activeWorkFrm = null;
+                    };
                 }
                 catch (Exception ex)
                 {
@@ -167,62 +147,43 @@ namespace Reminder
             var startHours = GetConfigValues(config, "AutoStartHours");
             if (startHours.Count == 0)
             {
-                //Logger.Log("警告：AutoStartHours配置为空，使用默认值[9,13]");
                 startHours = new List<int> { 9, 13 }; // 默认值
             }
-            //Logger.Log($"正在进行定期启动检查，startHours为{string.Join(", ", startHours)}，当前时间：{DateTime.Now}");
-            if (startHours.Contains(DateTime.Now.Hour) && (DateTime.Now.Minute == 0 || DateTime.Now.Minute == 1))
+            if (startHours.Contains(DateTime.Now.Hour) && (DateTime.Now.Minute == 0))
             {
-                Logger.Log($"尝试启动WorkFrm倒计时窗口，当前时间：{DateTime.Now}");
 
-                var existingWorkForm = Application.OpenForms.Cast<Form>()
-                    .FirstOrDefault(form => form is WorkFrm);
 
-                var existingRestForm = Application.OpenForms.Cast<Form>()
-                    .FirstOrDefault(form => form is RestFrm);
-
-                if (existingWorkForm == null)
+                // 关闭所有 WorkFrm 和RestFrm窗口
+                foreach (Form form in Application.OpenForms)
                 {
-                    if (existingRestForm != null)
+                    if (form is WorkFrm || form is RestFrm)
                     {
-                        Logger.Log("检测到RestFrm休息窗口存在，正在关闭");
-                        try
-                        {
-                            existingRestForm.Invoke((Action)(() =>
-                            {
-                                existingRestForm.Close();
-                            }));
-                            Logger.Log("休息RestFrm窗口关闭成功");
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Log($"关闭RestFrm休息窗口失败：{ex.Message}");
-                        }
-                    }
-
-                    try
-                    {
-                        Application.EnableVisualStyles();
-                        Application.SetCompatibleTextRenderingDefault(false);
-                        int workTimeValue = GetConfigValue(config, "WorkTimeValue", 45);
-                        int restTimeValue = GetConfigValue(config, "RestTimeValue", 15);
-
-                        WorkFrm workFrm = new WorkFrm(workTimeValue, restTimeValue);
-                        workFrm.Show();
-                        Logger.Log("WorkFrm倒计时窗口启动成功");
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Log($"WorkFrm倒计时窗口启动失败：{ex.Message}");
+                        form.Dispose();
+                        //Logger.Log($"已关闭：{form}--{DateTime.Now}");
+                        Logger.Log($"时间：{DateTime.Now}，{form}窗口已关闭");
                     }
                 }
-                else
+
+                // 启动新的WorkFrm窗口
+                try
                 {
-                    Logger.Log("WorkFrm倒计时窗口已存在，无需再次启动");
+                    Logger.Log($"尝试启动WorkFrm倒计时窗口，当前时间：{DateTime.Now}");
+                    //Application.EnableVisualStyles();
+                    //Application.SetCompatibleTextRenderingDefault(false);
+                    int workTimeValue = GetConfigValue(config, "WorkTimeValue", 45);
+                    int restTimeValue = GetConfigValue(config, "RestTimeValue", 15);
+
+                    WorkFrm wrkFrm = new WorkFrm(workTimeValue, restTimeValue);
+                    wrkFrm.Show();
+                    Logger.Log("WorkFrm倒计时窗口启动成功");
+
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log($"WorkFrm倒计时窗口启动失败：{ex.Message}");
                 }
             }
         }
-
 
         private static void CheckAndStopWorkFrm(Configuration config)
         {
@@ -233,8 +194,50 @@ namespace Reminder
             }
             if (stopHours.Contains(DateTime.Now.Hour))
             {
-                Logger.Log($"尝试关闭WorkFrm倒计时窗口，当前时间：{DateTime.Now}");
+                Logger.Log($"尝试关闭WorkFrm倒计时和Restfrm窗口，当前时间：{DateTime.Now}");
+                var forms = Application.OpenForms.Cast<Form>().ToArray();
+                bool hasError = false;
 
+                foreach (Form form in forms)
+                {
+                    if (form is WorkFrm || form is RestFrm)
+                    {
+                        try
+                        {
+                            form.Invoke((Action)(() => form.Dispose()));
+                            Logger.Log($"时间：{DateTime.Now}，{form}窗口已关闭");
+                            // 清除引用
+                            if (form == activeWorkFrm)
+                                activeWorkFrm = null;
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Log($"WorkFrm倒计时窗口关闭失败：{ex.Message}");
+                            Logger.Log($"时间：{DateTime.Now}，{form}窗口关闭失败:,异常信息：{ex.Message}{DateTime.Now}");
+                            hasError = true;
+                        }
+                    }
+                }
+
+                if (!hasError)
+                {
+                    Logger.Log("所有窗口关闭完成");
+                }
+                // 清除可能的引用
+                activeWorkFrm = null;
+                activeRestFrm = null;
+            }
+        }
+        private static void CheckAndStopWorkFrm_old(Configuration config)
+        {
+            var stopHours = GetConfigValues(config, "AutoStopHours");
+            if (stopHours.Count == 0)
+            {
+                stopHours = new List<int> { 12, 18 }; // 默认值
+            }
+            if (stopHours.Contains(DateTime.Now.Hour))
+            {
+                Logger.Log($"尝试关闭WorkFrm倒计时和Restfrm窗口，当前时间：{DateTime.Now}");
                 var forms = Application.OpenForms.Cast<Form>().ToArray();
                 bool hasError = false;
 

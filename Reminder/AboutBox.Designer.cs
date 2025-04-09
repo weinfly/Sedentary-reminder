@@ -55,7 +55,7 @@
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(56, 18);
             this.label2.TabIndex = 1;
-            this.label2.Text = "v1.4.1";
+            this.label2.Text = "v1.4.2";
             this.label2.Click += new System.EventHandler(this.label2_Click);
             // 
             // label3
@@ -65,7 +65,7 @@
             this.label3.Location = new System.Drawing.Point(15, 95);
             this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(400, 23);
+            this.label3.Size = new System.Drawing.Size(320, 18);
             this.label3.TabIndex = 2;
             this.label3.Text = "Author: Wei Junbo(Weihong Li修改自用版)";
             // 

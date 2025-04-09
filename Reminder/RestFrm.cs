@@ -115,8 +115,87 @@ namespace Reminder
         private static bool messageShown = false;
         // 添加一个静态字段来跟踪消息框是否正在显示
         private static bool isMessageShowing = false;
-
         private void ShowRestEndMessage()
+        {
+            if (!isMessageShowing)
+            {
+                isMessageShowing = true;
+                try
+                {
+                    // 获取配置的多个停止时间，默认值为12,18
+                    var stopHours = GetConfigValue("AutoStopHours", "12,18")
+                        .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(int.Parse)
+                        .ToList();
+
+                    int currentHour = DateTime.Now.Hour;
+
+                    // 检查当前时间是否等于任意一个停止时间
+                    if (stopHours.Any(h => currentHour == h))
+                    {
+                        return;
+                    }
+
+                    // 创建自定义消息框
+                    Form messageBoxForm = new Form
+                    {
+                        Size = new Size(400, 200),
+                        FormBorderStyle = FormBorderStyle.FixedDialog,
+                        StartPosition = FormStartPosition.CenterScreen,
+                        Text = "提示",
+                        TopMost = true,
+                        ControlBox = false
+                    };
+
+                    // 创建并配置计时器
+                    System.Windows.Forms.Timer closeTimer = new System.Windows.Forms.Timer
+                    {
+                        Interval = 15000 // 15秒
+                    };
+
+                    Label messageLabel = new Label
+                    {
+                        Text = "站立时间结束，请坐下继续搬砖吧！\n（本窗口将在15秒后自动关闭）\n点击此处可立即关闭",
+                        Dock = DockStyle.Fill,
+                        TextAlign = ContentAlignment.MiddleCenter,
+                        Font = new Font("微软雅黑", 12)
+                    };
+                    messageLabel.Click += (s, args) =>
+                    {
+                        closeTimer.Stop();
+                        messageBoxForm.Close();
+                    };
+                    messageLabel.Cursor = Cursors.Hand; // 将光标改为手型，表示可点击
+
+                    messageBoxForm.Controls.Add(messageLabel);
+
+                    // 启动计时器并显示消息框
+                    closeTimer.Start();
+                    messageBoxForm.ShowDialog();
+
+                    // 显示工作窗口
+                    int workTimeValue = GetConfigValue("WorkTimeValue", 45);
+                    int restTimeValue = GetConfigValue("RestTimeValue", 15);
+                    WorkFrm workFrm = new WorkFrm(workTimeValue, restTimeValue);
+                    workFrm.Show();
+
+                    // 关闭所有 RestFrm 实例
+                    var restForms = Application.OpenForms.Cast<Form>()
+                        .Where(f => f is RestFrm)
+                        .ToList(); // 创建副本避免枚举时修改集合
+                    
+                    foreach (var openForm in restForms)
+                    {
+                        openForm.Dispose();
+                    }
+                }
+                finally
+                {
+                    isMessageShowing = false;
+                }
+            }
+        }
+        private void ShowRestEndMessage_old()
         {
             if (!isMessageShowing)
             {
@@ -158,67 +237,6 @@ namespace Reminder
                 }
             }
         }
-        /* private void ShowRestEndMessage()
-         {
-             // 检查消息框是否正在显示
-             if (isMessageShowing)
-             {
-                 return;
-             }
-
-             // 设置消息框正在显示
-             isMessageShowing = true;
-
-             // 读取 app.config 中的 RestEndMessageScreen 设置项
-             int restEndMessageScreen = GetConfigValue("RestEndMessageScreen", 0);
-
-             // 获取所有显示器
-             Screen[] screens = Screen.AllScreens;
-
-             // 确定要显示消息框的显示器
-             Screen targetScreen = restEndMessageScreen >= 0 && restEndMessageScreen < screens.Length
-                 ? screens[restEndMessageScreen]
-                 : Screen.PrimaryScreen;
-
-             // 创建一个临时窗体，用于在指定的显示器上显示消息框
-             Form messageForm = new Form
-             {
-                 StartPosition = FormStartPosition.Manual,
-                 Location = targetScreen.Bounds.Location,
-                 Size = new Size(300, 200),
-                 FormBorderStyle = FormBorderStyle.None,
-                 TopMost = true
-             };
-
-             try
-             {
-                 // 显示消息框
-                 DialogResult result = MessageBox.Show(messageForm, "站立时间结束，请坐下继续搬砖吧！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                 if (result == DialogResult.OK)
-                 {
-                     int workTimeValue = GetConfigValue("WorkTimeValue", 45);
-                     int restTimeValue = GetConfigValue("RestTimeValue", 15);
-
-                     WorkFrm workFrm = new WorkFrm(workTimeValue, restTimeValue);
-                     workFrm.Show();
-
-                     // 关闭所有 RestFrm 实例
-                     foreach (Form openForm in Application.OpenForms)
-                     {
-                         if (openForm is RestFrm)
-                         {
-                             openForm.Close();
-                         }
-                     }
-                 }
-             }
-             finally
-             {
-                 // 设置消息框不再显示
-                 isMessageShowing = false;
-             }
-         }*/
 
         private int GetConfigValue(string key, int defaultValue)
         {
@@ -226,6 +244,12 @@ namespace Reminder
             return int.TryParse(value, out int result) ? result : defaultValue;
         }
 
+        // 添加新的方法来获取字符串类型的配置值
+        private string GetConfigValue(string key, string defaultValue)
+        {
+            var value = ConfigurationManager.AppSettings[key];
+            return string.IsNullOrEmpty(value) ? defaultValue : value;
+        }
         private void RestFrm_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (input_flag)
