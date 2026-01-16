@@ -48,16 +48,16 @@
             // timerRst
             // 
             this.timerRst.Interval = 1000;
-            ////this.timerRst.Tick += new System.EventHandler(this.TimerRst_Tick);
             // 
             // lbl_seconds
             // 
             this.lbl_seconds.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.lbl_seconds.Font = new System.Drawing.Font("Consolas", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lbl_seconds.ForeColor = System.Drawing.Color.White;
-            this.lbl_seconds.Location = new System.Drawing.Point(536, 274);
+            this.lbl_seconds.Location = new System.Drawing.Point(715, 337);
+            this.lbl_seconds.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbl_seconds.Name = "lbl_seconds";
-            this.lbl_seconds.Size = new System.Drawing.Size(100, 60);
+            this.lbl_seconds.Size = new System.Drawing.Size(133, 74);
             this.lbl_seconds.TabIndex = 0;
             // 
             // lbl_minutes
@@ -65,9 +65,10 @@
             this.lbl_minutes.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.lbl_minutes.Font = new System.Drawing.Font("Consolas", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lbl_minutes.ForeColor = System.Drawing.Color.White;
-            this.lbl_minutes.Location = new System.Drawing.Point(472, 274);
+            this.lbl_minutes.Location = new System.Drawing.Point(629, 337);
+            this.lbl_minutes.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbl_minutes.Name = "lbl_minutes";
-            this.lbl_minutes.Size = new System.Drawing.Size(54, 60);
+            this.lbl_minutes.Size = new System.Drawing.Size(72, 74);
             this.lbl_minutes.TabIndex = 1;
             this.lbl_minutes.Text = "  ";
             // 
@@ -76,9 +77,10 @@
             this.label1.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label1.Font = new System.Drawing.Font("微软雅黑", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label1.ForeColor = System.Drawing.Color.White;
-            this.label1.Location = new System.Drawing.Point(519, 270);
+            this.label1.Location = new System.Drawing.Point(692, 332);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(24, 86);
+            this.label1.Size = new System.Drawing.Size(32, 106);
             this.label1.TabIndex = 2;
             this.label1.Text = ":";
             // 
@@ -87,9 +89,10 @@
             this.lblText.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.lblText.AutoSize = true;
             this.lblText.Font = new System.Drawing.Font("楷体", 21.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblText.Location = new System.Drawing.Point(30, 205);
+            this.lblText.Location = new System.Drawing.Point(20, 252);
+            this.lblText.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblText.Name = "lblText";
-            this.lblText.Size = new System.Drawing.Size(757, 29);
+            this.lblText.Size = new System.Drawing.Size(953, 37);
             this.lblText.TabIndex = 3;
             this.lblText.Text = "久坐对身体不好，键盘和鼠标被锁定，站起来活动下！";
             this.lblText.Click += new System.EventHandler(this.lblText_Click);
@@ -98,18 +101,20 @@
             // 
             this.label2.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label2.Image = global::Reminder.Properties.Resources.sport_64_01;
-            this.label2.Location = new System.Drawing.Point(332, 344);
+            this.label2.Location = new System.Drawing.Point(443, 423);
+            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(119, 113);
+            this.label2.Size = new System.Drawing.Size(159, 139);
             this.label2.TabIndex = 4;
             // 
             // label3
             // 
             this.label3.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label3.Font = new System.Drawing.Font("楷体", 21.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label3.Location = new System.Drawing.Point(272, 278);
+            this.label3.Location = new System.Drawing.Point(363, 342);
+            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(203, 31);
+            this.label3.Size = new System.Drawing.Size(271, 38);
             this.label3.TabIndex = 5;
             this.label3.Text = "解锁倒计时：";
             // 
@@ -117,27 +122,30 @@
             // 
             this.label5.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label5.Image = global::Reminder.Properties.Resources.sit_64;
-            this.label5.Location = new System.Drawing.Point(207, 344);
+            this.label5.Location = new System.Drawing.Point(276, 423);
+            this.label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(119, 113);
+            this.label5.Size = new System.Drawing.Size(159, 139);
             this.label5.TabIndex = 7;
             // 
             // label4
             // 
             this.label4.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label4.Image = global::Reminder.Properties.Resources.sport_64_03;
-            this.label4.Location = new System.Drawing.Point(591, 344);
+            this.label4.Location = new System.Drawing.Point(788, 423);
+            this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(119, 113);
+            this.label4.Size = new System.Drawing.Size(159, 139);
             this.label4.TabIndex = 8;
             // 
             // label6
             // 
             this.label6.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label6.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label6.Location = new System.Drawing.Point(318, 388);
+            this.label6.Location = new System.Drawing.Point(424, 478);
+            this.label6.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(21, 59);
+            this.label6.Size = new System.Drawing.Size(28, 73);
             this.label6.TabIndex = 9;
             this.label6.Text = ">";
             // 
@@ -145,9 +153,10 @@
             // 
             this.label7.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label7.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label7.Location = new System.Drawing.Point(438, 388);
+            this.label7.Location = new System.Drawing.Point(584, 478);
+            this.label7.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(21, 59);
+            this.label7.Size = new System.Drawing.Size(28, 73);
             this.label7.TabIndex = 10;
             this.label7.Text = ">";
             // 
@@ -155,27 +164,29 @@
             // 
             this.label8.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label8.Image = global::Reminder.Properties.Resources.sport_64_02;
-            this.label8.Location = new System.Drawing.Point(460, 344);
+            this.label8.Location = new System.Drawing.Point(613, 423);
+            this.label8.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(119, 113);
+            this.label8.Size = new System.Drawing.Size(159, 139);
             this.label8.TabIndex = 11;
             // 
             // label9
             // 
             this.label9.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.label9.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label9.Location = new System.Drawing.Point(582, 388);
+            this.label9.Location = new System.Drawing.Point(776, 478);
+            this.label9.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(21, 59);
+            this.label9.Size = new System.Drawing.Size(28, 73);
             this.label9.TabIndex = 12;
             this.label9.Text = ">";
             // 
             // RestFrm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Green;
-            this.ClientSize = new System.Drawing.Size(905, 526);
+            this.ClientSize = new System.Drawing.Size(1207, 647);
             this.Controls.Add(this.label9);
             this.Controls.Add(this.label8);
             this.Controls.Add(this.label7);
@@ -190,11 +201,11 @@
             this.Controls.Add(this.lbl_seconds);
             this.ForeColor = System.Drawing.Color.White;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "RestFrm";
             this.Opacity = 0.75D;
             this.ShowInTaskbar = false;
             this.Text = "RestFrm";
-            ////this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.RestFrm_FormClosed);
             this.Load += new System.EventHandler(this.RestFrm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

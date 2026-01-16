@@ -23,7 +23,36 @@ namespace Reminder
         {
             InitializeComponent();
         }
+
+        // 20250507- 1、添加了对配置值的验证逻辑，确保WorkTimeValue和RestTimeValue必须是正数,2、- 对于工作时间添加了上限验证（8小时），防止设置过长的工作时间
         private int GetConfigValue(string key, int defaultValue)
+        {
+            var value = ConfigurationManager.AppSettings[key];
+            if (!int.TryParse(value, out int result))
+            {
+                return defaultValue;
+            }
+
+            // 添加参数验证
+            if (key == "WorkTimeValue" || key == "RestTimeValue")
+            {
+                if (result <= 0)
+                {
+                    LogException(new ArgumentException($"{key}值必须为正数"), "配置验证");
+                    return defaultValue;
+                }
+
+                // 对于工作时间，可以设置最大限制（如480分钟=8小时）
+                if (key == "WorkTimeValue" && result > 480)
+                {
+                    LogException(new ArgumentException("工作时间不能超过8小时"), "配置验证");
+                    return defaultValue;
+                }
+            }
+
+            return result;
+        }
+        private int GetConfigValue_20250507(string key, int defaultValue)
         {
             var value = ConfigurationManager.AppSettings[key];
             return int.TryParse(value, out int result) ? result : defaultValue;
@@ -47,7 +76,23 @@ namespace Reminder
                 int restTimeValue = GetConfigValue("RestTimeValue", 15);
 
                 DateTime nextBreakTime;
-                if (now.Minute < workTimeValue)
+                /*if (now.Minute < workTimeValue)
+                {
+                    nextBreakTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, workTimeValue, 0);
+                }
+                else
+                {
+                    nextBreakTime = new DateTime(now.Year, now.Month, now.Day, now.Hour + 1, workTimeValue, 0);
+                }*/
+
+                //20250507，修改计算方式，支持配置文件中的WorkTimeValue大于60的情况
+                if (workTimeValue >= 60)
+                {
+                    int hours = workTimeValue / 60;
+                    int minutes = workTimeValue % 60;
+                    nextBreakTime = now.Date.AddHours(now.Hour + hours).AddMinutes(minutes);
+                }
+                else if (now.Minute < workTimeValue)
                 {
                     nextBreakTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, workTimeValue, 0);
                 }
@@ -65,8 +110,6 @@ namespace Reminder
                 this.wrk_m = wrk_minutes;
                 this.input_flag = false;
 
-                //int x = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Size.Width - 160;
-                //int y = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Size.Height - 90;
                 // 读取 WorkFormScreen 配置项，若不存在则默认显示在第一个屏幕
                 int screenIndex = GetConfigValue("WorkFormScreen", 0);
                 Screen[] screens = Screen.AllScreens;
@@ -93,8 +136,6 @@ namespace Reminder
             {
                 // 记录异常日志
                 LogException(ex, "构造函数异常");
-
-
 
                 // 重新抛出异常以保持原有行为
                 throw;
@@ -138,8 +179,6 @@ namespace Reminder
             {
                 // 记录异常日志
                 LogException(ex, "构造函数异常");
-
-
 
                 // 重新抛出异常以保持原有行为
                 throw;
@@ -315,9 +354,6 @@ namespace Reminder
         {
             // 空实现，仅用于满足事件绑定
         }
-
-
-
 
         private void button1_Click(object sender, EventArgs e)
         {
