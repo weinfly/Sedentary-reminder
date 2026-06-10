@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
@@ -63,6 +63,11 @@ namespace Reminder
             Configuration config = GetAppConfiguration();
             var mainForm = CreateMainForm(config);
 
+            // 确保主窗口保持隐藏，不显示给用户
+            mainForm.Visible = false;
+            mainForm.ShowInTaskbar = false;
+            mainForm.Opacity = 0;
+
             InitializeTimers(config);
             ShowInitialWorkForm(config);
 
@@ -86,7 +91,11 @@ namespace Reminder
 
         private static void ShowInitialWorkForm(Configuration config)
         {
-            CheckAndStartWorkFrm(config);
+            // 周末不自动启动
+            if (DateTime.Now.DayOfWeek != DayOfWeek.Saturday && DateTime.Now.DayOfWeek != DayOfWeek.Sunday)
+            {
+                CheckAndStartWorkFrm(config);
+            }
         }
 
         private static MainFrm CreateMainForm(Configuration config)
@@ -141,7 +150,15 @@ namespace Reminder
 
         private static bool ShouldStartWorkForm(List<int> startHours)
         {
-            return startHours.Contains(DateTime.Now.Hour) && DateTime.Now.Minute == 0;
+            var now = DateTime.Now;
+            // 周六(6)和周日(0)不启动倒计时
+            if (now.DayOfWeek == DayOfWeek.Saturday || now.DayOfWeek == DayOfWeek.Sunday)
+                return false;
+
+            // 检查当前是否在任何配置的启动小时内
+            // 只要在启动小时范围内（如9:00-9:59），就启动倒计时
+            // 倒计时会根据整点对齐计算剩余时间（见 WorkFrm）
+            return startHours.Contains(now.Hour);
         }
 
         private static void CleanupExistingForms()

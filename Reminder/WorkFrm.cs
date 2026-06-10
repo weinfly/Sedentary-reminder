@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Configuration;
 using System.Drawing;
 using System.IO;
@@ -70,35 +70,25 @@ namespace Reminder
                 // 获取当前时间
                 DateTime now = DateTime.Now;
 
-                // 根据配置文件的WorkTimeValue，计算下一个时间点  20250219，将第一次启动时的记时，改成根据配置文件，而不是固定的45
-                // int workTimeValue = int.Parse(ConfigurationManager.AppSettings["WorkTimeValue"]);
+                // 根据配置文件的WorkTimeValue，计算下一个时间点
+                // 倒计时逻辑：基于"启动小时的整点 + 工作时长"来计算提醒时间
+                // 例如：设置工作45分钟，9:11启动 → 提醒时间是9:45 → 倒计时34分钟
+                // 例如：设置工作90分钟，9:10启动 → 提醒时间是10:30 → 倒计时80分钟
                 int workTimeValue = GetConfigValue("WorkTimeValue", 45);
                 int restTimeValue = GetConfigValue("RestTimeValue", 15);
 
-                DateTime nextBreakTime;
-                /*if (now.Minute < workTimeValue)
-                {
-                    nextBreakTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, workTimeValue, 0);
-                }
-                else
-                {
-                    nextBreakTime = new DateTime(now.Year, now.Month, now.Day, now.Hour + 1, workTimeValue, 0);
-                }*/
+                // 计算当前小时的整点时间
+                DateTime hourStart = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0);
 
-                //20250507，修改计算方式，支持配置文件中的WorkTimeValue大于60的情况
-                if (workTimeValue >= 60)
+                // 提醒时间 = 当前小时整点 + 工作时长
+                DateTime nextBreakTime = hourStart.AddMinutes(workTimeValue);
+
+                // 如果计算出的提醒时间已经过去了（比如工作时长超过60分钟且当前时间已超过），则取下一个周期
+                if (nextBreakTime <= now)
                 {
-                    int hours = workTimeValue / 60;
-                    int minutes = workTimeValue % 60;
-                    nextBreakTime = now.Date.AddHours(now.Hour + hours).AddMinutes(minutes);
-                }
-                else if (now.Minute < workTimeValue)
-                {
-                    nextBreakTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, workTimeValue, 0);
-                }
-                else
-                {
-                    nextBreakTime = new DateTime(now.Year, now.Month, now.Day, now.Hour + 1, workTimeValue, 0);
+                    // 提醒时间已过期，说明已经进入了下一个周期或应该立即提醒
+                    // 这种情况下，使用完整的工作时长作为倒计时（从当前时刻开始一个新的完整周期）
+                    nextBreakTime = now.AddMinutes(workTimeValue);
                 }
 
                 // 计算时间差，精确到毫秒
@@ -106,8 +96,8 @@ namespace Reminder
                 double totalMilliseconds = timeDiff.TotalMilliseconds;
                 this.wrk_minutes = (int)(totalMilliseconds / 60000);
                 this.wrk_seconds = (int)((totalMilliseconds % 60000) / 1000);
-                this.rst_minutes = rst_minutes;
-                this.wrk_m = wrk_minutes;
+                this.rst_minutes = restTimeValue;
+                this.wrk_m = workTimeValue;
                 this.input_flag = false;
 
                 // 读取 WorkFormScreen 配置项，若不存在则默认显示在第一个屏幕

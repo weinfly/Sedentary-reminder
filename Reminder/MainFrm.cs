@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -51,15 +51,12 @@ namespace Reminder
 
         private void MainFrm_Load(object sender, EventArgs e)
         {
-            //最小化主窗口
-            //这里有问题，只能最小化，visible和hide都无法隐藏，暂时无法解决
-            this.WindowState = FormWindowState.Minimized;
+            //直接隐藏主窗口，不最小化到任务栏
             this.ShowInTaskbar = false;
-            //this.Visible = false;
             this.Hide();
 
-            // 在窗体加载时调用 First_Start 方法
-            First_Start(null, EventArgs.Empty);
+            // 静默运行时不自动显示WorkFrm，由Program.cs中的定时器在整点时触发
+            // First_Start(null, EventArgs.Empty);
 
             bool autoStart = GetQuickFromFolder(systemStartPath, appAllPath).Count > 0;
             autoStartMenuItem.Checked = autoStart;
@@ -154,9 +151,6 @@ namespace Reminder
         {
             //取消关闭窗口
             e.Cancel = true;
-            //最小化主窗口
-            this.WindowState = FormWindowState.Minimized;
-            //this.Visible = false;
             //不在系统任务栏显示主窗口图标
             this.ShowInTaskbar = false;
             this.Hide();
