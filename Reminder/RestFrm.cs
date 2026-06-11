@@ -1,7 +1,6 @@
-﻿using System;
+using System;
 using System.Configuration;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -9,9 +8,10 @@ namespace Reminder
 {
     public partial class RestFrm : Form
     {
-        // 静态字段
+        // 静态字段 - 使用锁保证线程安全
         private static bool messageShown = false;
         private static bool isMessageShowing = false;
+        private static readonly object _lock = new object();
 
         // 实例字段
         private int rst_m;
@@ -41,23 +41,25 @@ namespace Reminder
         {
             SetupUI();
             InitializeTimer();
-            this.Activate(); // 确保窗体在加载时获得焦点
+            this.Activate();
         }
 
         private void SetupUI()
         {
-            lblText.Text = input_flag
-                ? $"久坐对身体不好！您已久坐{wrk_m}分钟了，键盘和鼠标被锁定，禁止操作且无法退出，站起来活动下吧！"
-                : $"久坐对身体不好！您已久坐{wrk_m}分钟了，站起来活动下吧，顺便喝口水，补充下水分！Alt+F4 退出本界面。";
-
+            // 根据是否锁定输入显示不同提示
             if (input_flag)
             {
+                lblText.Text = $"⚠️ 久坐对身体不好！您已久坐{wrk_m}分钟了，\n键盘和鼠标被锁定，请站起来活动一下！";
                 KeyboardBlocker.off();
+            }
+            else
+            {
+                lblText.Text = $"💪 久坐对身体不好！您已久坐{wrk_m}分钟了，\n站起来活动下吧，顺便喝口水！(Alt+F4 退出)";
             }
 
             this.TopMost = true;
             this.WindowState = FormWindowState.Maximized;
-            this.Opacity = 0.75;
+            this.Opacity = 0.85;
 
             UpdateTimeLabels();
         }
@@ -72,7 +74,10 @@ namespace Reminder
             countdownTimer.Start();
 
             // 重置消息框显示标志
-            messageShown = false;
+            lock (_lock)
+            {
+                messageShown = false;
+            }
         }
 
         private void CountdownTimer_Tick(object sender, EventArgs e)
@@ -89,24 +94,22 @@ namespace Reminder
                     rst_s--;
                 }
                 UpdateTimeLabels();
-                //System.Diagnostics.Debug.WriteLine($"倒计时中，rst_s的值为：{rst_s}");
             }
             else
             {
                 // 检查消息框是否已经显示过
-                if (!messageShown)
+                lock (_lock)
                 {
-                    // 标记消息框已经显示过
-                    messageShown = true;
-
-                    // 调用 ShowRestEndMessage 方法
-                    ShowRestEndMessage();
-                }
-                else
-                {
-                    // 如果消息框已经显示过，停止计时器并关闭当前实例
-                    countdownTimer.Stop();
-                    this.Close();
+                    if (!messageShown)
+                    {
+                        messageShown = true;
+                        ShowRestEndMessage();
+                    }
+                    else
+                    {
+                        countdownTimer.Stop();
+                        this.Close();
+                    }
                 }
             }
         }
@@ -119,10 +122,13 @@ namespace Reminder
 
         private void ShowRestEndMessage()
         {
-            if (isMessageShowing)
-                return;
+            lock (_lock)
+            {
+                if (isMessageShowing)
+                    return;
+                isMessageShowing = true;
+            }
 
-            isMessageShowing = true;
             try
             {
                 // 获取配置的多个停止时间，默认值为12,18
@@ -139,53 +145,43 @@ namespace Reminder
                     return;
                 }
 
-                // 创建自定义消息框
+                // 创建自定义消息框 - 现代化样式
                 Form messageBoxForm = new Form
                 {
-                    Size = new Size(400, 200),
+                    Size = new Size(420, 220),
                     FormBorderStyle = FormBorderStyle.FixedDialog,
                     StartPosition = FormStartPosition.CenterScreen,
-                    Text = "提示",
+                    Text = "休息结束",
                     TopMost = true,
-                    ControlBox = false
+                    ControlBox = false,
+                    BackColor = Color.FromArgb(74, 144, 217) // 清新蓝色
                 };
 
-                // 创建并配置计时器
+                // 创建计时器
                 System.Windows.Forms.Timer closeTimer = new System.Windows.Forms.Timer
                 {
-                    Interval = 15000 // 15秒
-                };
-
-                // 添加计时器Tick事件处理
-                closeTimer.Tick += (s, args) =>
-                {
-                    closeTimer.Stop();
-                    messageBoxForm.Close();
+                    Interval = 15000
                 };
 
                 Label messageLabel = new Label
                 {
-                    Text = "站立时间结束，请坐下继续搬砖吧！\n（本窗口将在15秒后自动关闭）\n\n点击此处可立即关闭",
+                    Text = "✅ 站立时间结束！\n\n请坐下继续工作吧～\n（窗口将在 15 秒后自动关闭）\n\n点击此处立即关闭",
                     Dock = DockStyle.Fill,
                     TextAlign = ContentAlignment.MiddleCenter,
-                    Font = new Font("微软雅黑", 14)
+                    Font = new Font("微软雅黑", 13F),
+                    ForeColor = Color.White,
+                    BackColor = Color.Transparent
                 };
                 messageLabel.Click += (s, args) =>
                 {
                     closeTimer.Stop();
                     messageBoxForm.Close();
                 };
-                messageLabel.Cursor = Cursors.Hand; // 将光标改为手型，表示可点击
+                messageLabel.Cursor = Cursors.Hand;
 
                 messageBoxForm.Controls.Add(messageLabel);
+                messageBoxForm.FormClosed += (s, args) => closeTimer.Dispose();
 
-                // 窗体关闭时释放资源
-                messageBoxForm.FormClosed += (s, args) =>
-                {
-                    closeTimer.Dispose();
-                };
-
-                // 启动计时器并显示消息框
                 closeTimer.Start();
                 messageBoxForm.ShowDialog();
 
@@ -198,7 +194,7 @@ namespace Reminder
                 // 关闭所有 RestFrm 实例
                 var restForms = Application.OpenForms.Cast<Form>()
                     .Where(f => f is RestFrm)
-                    .ToList(); // 创建副本避免枚举时修改集合
+                    .ToList();
 
                 foreach (var openForm in restForms)
                 {
@@ -207,48 +203,8 @@ namespace Reminder
             }
             finally
             {
-                isMessageShowing = false;
-            }
-        }
-
-        private void ShowRestEndMessage_old()
-        {
-            if (!isMessageShowing)
-            {
-                isMessageShowing = true;
-                try
+                lock (_lock)
                 {
-                    int stopHour = GetConfigValue("AutoStopHour", 18);
-                    int currentHour = DateTime.Now.Hour;
-                    if (currentHour >= stopHour)
-                    {
-                        // 如果当前时间已经超过停止时间，不显示消息框
-                        return;
-                    }
-                    // 显示消息框
-                    DialogResult result = MessageBox.Show("站立时间结束，请坐下继续搬砖吧！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                    if (result == DialogResult.OK)
-                    {
-                        int workTimeValue = GetConfigValue("WorkTimeValue", 45);
-                        int restTimeValue = GetConfigValue("RestTimeValue", 15);
-
-                        WorkFrm workFrm = new WorkFrm(workTimeValue, restTimeValue);
-                        workFrm.Show();
-
-                        // 关闭所有 RestFrm 实例
-                        foreach (Form openForm in Application.OpenForms)
-                        {
-                            if (openForm is RestFrm)
-                            {
-                                openForm.Close();
-                            }
-                        }
-                    }
-                }
-                finally
-                {
-                    // 设置消息框不再显示
                     isMessageShowing = false;
                 }
             }
@@ -260,7 +216,6 @@ namespace Reminder
             return int.TryParse(value, out int result) ? result : defaultValue;
         }
 
-        // 添加新的方法来获取字符串类型的配置值
         private string GetConfigValue(string key, string defaultValue)
         {
             var value = ConfigurationManager.AppSettings[key];
@@ -273,6 +228,7 @@ namespace Reminder
             {
                 KeyboardBlocker.on();
             }
+
             // 检查是否是用户手动关闭休息遮罩窗体
             if (e.CloseReason == CloseReason.UserClosing)
             {
@@ -284,13 +240,12 @@ namespace Reminder
                         openForm.Hide();
                     }
                 }
-                e.Cancel = true; // 取消关闭操作
-                this.Hide(); // 隐藏窗体
-                //System.Diagnostics.Debug.WriteLine("RestFrm hidden");
+                e.Cancel = true;
+                this.Hide();
             }
-            //同步关闭：在 FormClosing 事件中，遍历 Application.OpenForms，关闭所有 RestFrm 实例。这确保了按一次 Alt+F4 可以关闭所有显示器上的遮罩窗体。
             else
             {
+                // 同步关闭所有 RestFrm 实例
                 foreach (Form openForm in Application.OpenForms)
                 {
                     if (openForm is RestFrm)
@@ -301,9 +256,9 @@ namespace Reminder
             }
         }
 
-        // 添加这个空方法来解决设计器文件中的错误
         private void lblText_Click(object sender, EventArgs e)
         {
+            // 空实现，用于事件绑定
         }
     }
 }

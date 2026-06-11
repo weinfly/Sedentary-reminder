@@ -1,4 +1,4 @@
-﻿namespace Reminder
+namespace Reminder
 {
     partial class RestFrm
     {
@@ -29,203 +29,261 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.timerRst = new System.Windows.Forms.Timer(this.components);
-            this.lbl_seconds = new System.Windows.Forms.Label();
-            this.lbl_minutes = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
+            this.tableLayoutPanelMain = new System.Windows.Forms.TableLayoutPanel();
+            this.pnlTop = new System.Windows.Forms.Panel();
             this.lblText = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
-            this.label6 = new System.Windows.Forms.Label();
-            this.label7 = new System.Windows.Forms.Label();
-            this.label8 = new System.Windows.Forms.Label();
-            this.label9 = new System.Windows.Forms.Label();
+            this.pnlCenter = new System.Windows.Forms.Panel();
+            this.tableLayoutPanelCenter = new System.Windows.Forms.TableLayoutPanel();
+            this.pnlIcon = new System.Windows.Forms.Panel();
+            this.lblIcon = new System.Windows.Forms.Label();
+            this.pnlTimer = new System.Windows.Forms.Panel();
+            this.tableLayoutPanelTimer = new System.Windows.Forms.TableLayoutPanel();
+            this.lblTimerTitle = new System.Windows.Forms.Label();
+            this.pnlTimeDisplay = new System.Windows.Forms.Panel();
+            this.lbl_minutes = new System.Windows.Forms.Label();
+            this.labelColon = new System.Windows.Forms.Label();
+            this.lbl_seconds = new System.Windows.Forms.Label();
+            this.pnlBottom = new System.Windows.Forms.Panel();
+            this.lblHint = new System.Windows.Forms.Label();
+            this.tableLayoutPanelMain.SuspendLayout();
+            this.pnlTop.SuspendLayout();
+            this.pnlCenter.SuspendLayout();
+            this.tableLayoutPanelCenter.SuspendLayout();
+            this.pnlIcon.SuspendLayout();
+            this.pnlTimer.SuspendLayout();
+            this.tableLayoutPanelTimer.SuspendLayout();
+            this.pnlTimeDisplay.SuspendLayout();
+            this.pnlBottom.SuspendLayout();
             this.SuspendLayout();
             // 
-            // timerRst
+            // tableLayoutPanelMain
             // 
-            this.timerRst.Interval = 1000;
+            this.tableLayoutPanelMain.ColumnCount = 1;
+            this.tableLayoutPanelMain.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanelMain.Controls.Add(this.pnlTop, 0, 0);
+            this.tableLayoutPanelMain.Controls.Add(this.pnlCenter, 0, 1);
+            this.tableLayoutPanelMain.Controls.Add(this.pnlBottom, 0, 2);
+            this.tableLayoutPanelMain.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanelMain.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanelMain.Name = "tableLayoutPanelMain";
+            this.tableLayoutPanelMain.RowCount = 3;
+            this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 60F));
+            this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanelMain.Size = new System.Drawing.Size(800, 600);
+            this.tableLayoutPanelMain.TabIndex = 0;
             // 
-            // lbl_seconds
+            // pnlTop
             // 
-            this.lbl_seconds.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.lbl_seconds.Font = new System.Drawing.Font("Consolas", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_seconds.ForeColor = System.Drawing.Color.White;
-            this.lbl_seconds.Location = new System.Drawing.Point(715, 337);
-            this.lbl_seconds.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.lbl_seconds.Name = "lbl_seconds";
-            this.lbl_seconds.Size = new System.Drawing.Size(133, 74);
-            this.lbl_seconds.TabIndex = 0;
-            // 
-            // lbl_minutes
-            // 
-            this.lbl_minutes.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.lbl_minutes.Font = new System.Drawing.Font("Consolas", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_minutes.ForeColor = System.Drawing.Color.White;
-            this.lbl_minutes.Location = new System.Drawing.Point(629, 337);
-            this.lbl_minutes.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.lbl_minutes.Name = "lbl_minutes";
-            this.lbl_minutes.Size = new System.Drawing.Size(72, 74);
-            this.lbl_minutes.TabIndex = 1;
-            this.lbl_minutes.Text = "  ";
-            // 
-            // label1
-            // 
-            this.label1.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.label1.Font = new System.Drawing.Font("微软雅黑", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label1.ForeColor = System.Drawing.Color.White;
-            this.label1.Location = new System.Drawing.Point(692, 332);
-            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(32, 106);
-            this.label1.TabIndex = 2;
-            this.label1.Text = ":";
+            this.pnlTop.Controls.Add(this.lblText);
+            this.pnlTop.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pnlTop.Location = new System.Drawing.Point(0, 0);
+            this.pnlTop.Name = "pnlTop";
+            this.pnlTop.Size = new System.Drawing.Size(800, 120);
+            this.pnlTop.TabIndex = 0;
             // 
             // lblText
             // 
-            this.lblText.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.lblText.AutoSize = true;
-            this.lblText.Font = new System.Drawing.Font("楷体", 21.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblText.Location = new System.Drawing.Point(20, 252);
-            this.lblText.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblText.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblText.Font = new System.Drawing.Font("微软雅黑", 16F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblText.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(52)))), ((int)(((byte)(54)))));
+            this.lblText.Location = new System.Drawing.Point(0, 0);
             this.lblText.Name = "lblText";
-            this.lblText.Size = new System.Drawing.Size(953, 37);
-            this.lblText.TabIndex = 3;
-            this.lblText.Text = "久坐对身体不好，键盘和鼠标被锁定，站起来活动下！";
-            this.lblText.Click += new System.EventHandler(this.lblText_Click);
+            this.lblText.Size = new System.Drawing.Size(800, 120);
+            this.lblText.TabIndex = 0;
+            this.lblText.Text = "久坐对身体不好，站起来活动下吧！";
+            this.lblText.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // label2
+            // pnlCenter
             // 
-            this.label2.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.label2.Image = global::Reminder.Properties.Resources.sport_64_01;
-            this.label2.Location = new System.Drawing.Point(443, 423);
-            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(159, 139);
-            this.label2.TabIndex = 4;
+            this.pnlCenter.Controls.Add(this.tableLayoutPanelCenter);
+            this.pnlCenter.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pnlCenter.Location = new System.Drawing.Point(0, 120);
+            this.pnlCenter.Name = "pnlCenter";
+            this.pnlCenter.Size = new System.Drawing.Size(800, 360);
+            this.pnlCenter.TabIndex = 1;
             // 
-            // label3
+            // tableLayoutPanelCenter
             // 
-            this.label3.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.label3.Font = new System.Drawing.Font("楷体", 21.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label3.Location = new System.Drawing.Point(363, 342);
-            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(271, 38);
-            this.label3.TabIndex = 5;
-            this.label3.Text = "解锁倒计时：";
+            this.tableLayoutPanelCenter.ColumnCount = 2;
+            this.tableLayoutPanelCenter.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanelCenter.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanelCenter.Controls.Add(this.pnlIcon, 0, 0);
+            this.tableLayoutPanelCenter.Controls.Add(this.pnlTimer, 1, 0);
+            this.tableLayoutPanelCenter.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanelCenter.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanelCenter.Name = "tableLayoutPanelCenter";
+            this.tableLayoutPanelCenter.RowCount = 1;
+            this.tableLayoutPanelCenter.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanelCenter.Size = new System.Drawing.Size(800, 360);
+            this.tableLayoutPanelCenter.TabIndex = 0;
             // 
-            // label5
+            // pnlIcon
             // 
-            this.label5.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.label5.Image = global::Reminder.Properties.Resources.sit_64;
-            this.label5.Location = new System.Drawing.Point(276, 423);
-            this.label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(159, 139);
-            this.label5.TabIndex = 7;
+            this.pnlIcon.Controls.Add(this.lblIcon);
+            this.pnlIcon.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pnlIcon.Location = new System.Drawing.Point(0, 0);
+            this.pnlIcon.Name = "pnlIcon";
+            this.pnlIcon.Size = new System.Drawing.Size(397, 360);
+            this.pnlIcon.TabIndex = 0;
             // 
-            // label4
+            // lblIcon
             // 
-            this.label4.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.label4.Image = global::Reminder.Properties.Resources.sport_64_03;
-            this.label4.Location = new System.Drawing.Point(788, 423);
-            this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(159, 139);
-            this.label4.TabIndex = 8;
+            this.lblIcon.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblIcon.Font = new System.Drawing.Font("微软雅黑", 80F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblIcon.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(52)))), ((int)(((byte)(54)))));
+            this.lblIcon.Location = new System.Drawing.Point(0, 0);
+            this.lblIcon.Name = "lblIcon";
+            this.lblIcon.Size = new System.Drawing.Size(397, 360);
+            this.lblIcon.TabIndex = 0;
+            this.lblIcon.Text = "🏃";
+            this.lblIcon.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // label6
+            // pnlTimer
             // 
-            this.label6.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.label6.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label6.Location = new System.Drawing.Point(424, 478);
-            this.label6.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(28, 73);
-            this.label6.TabIndex = 9;
-            this.label6.Text = ">";
+            this.pnlTimer.Controls.Add(this.tableLayoutPanelTimer);
+            this.pnlTimer.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pnlTimer.Location = new System.Drawing.Point(397, 0);
+            this.pnlTimer.Name = "pnlTimer";
+            this.pnlTimer.Size = new System.Drawing.Size(403, 360);
+            this.pnlTimer.TabIndex = 1;
             // 
-            // label7
+            // tableLayoutPanelTimer
             // 
-            this.label7.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.label7.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label7.Location = new System.Drawing.Point(584, 478);
-            this.label7.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(28, 73);
-            this.label7.TabIndex = 10;
-            this.label7.Text = ">";
+            this.tableLayoutPanelTimer.ColumnCount = 1;
+            this.tableLayoutPanelTimer.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanelTimer.Controls.Add(this.lblTimerTitle, 0, 0);
+            this.tableLayoutPanelTimer.Controls.Add(this.pnlTimeDisplay, 0, 1);
+            this.tableLayoutPanelTimer.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanelTimer.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanelTimer.Name = "tableLayoutPanelTimer";
+            this.tableLayoutPanelTimer.RowCount = 2;
+            this.tableLayoutPanelTimer.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 30F));
+            this.tableLayoutPanelTimer.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 70F));
+            this.tableLayoutPanelTimer.Size = new System.Drawing.Size(403, 360);
+            this.tableLayoutPanelTimer.TabIndex = 0;
             // 
-            // label8
+            // lblTimerTitle
             // 
-            this.label8.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.label8.Image = global::Reminder.Properties.Resources.sport_64_02;
-            this.label8.Location = new System.Drawing.Point(613, 423);
-            this.label8.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(159, 139);
-            this.label8.TabIndex = 11;
+            this.lblTimerTitle.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblTimerTitle.Font = new System.Drawing.Font("微软雅黑", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblTimerTitle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(52)))), ((int)(((byte)(54)))));
+            this.lblTimerTitle.Location = new System.Drawing.Point(3, 0);
+            this.lblTimerTitle.Name = "lblTimerTitle";
+            this.lblTimerTitle.Size = new System.Drawing.Size(397, 108);
+            this.lblTimerTitle.TabIndex = 0;
+            this.lblTimerTitle.Text = "🔒 解锁倒计时";
+            this.lblTimerTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // label9
+            // pnlTimeDisplay
             // 
-            this.label9.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.label9.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label9.Location = new System.Drawing.Point(776, 478);
-            this.label9.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(28, 73);
-            this.label9.TabIndex = 12;
-            this.label9.Text = ">";
+            this.pnlTimeDisplay.Controls.Add(this.lbl_minutes);
+            this.pnlTimeDisplay.Controls.Add(this.labelColon);
+            this.pnlTimeDisplay.Controls.Add(this.lbl_seconds);
+            this.pnlTimeDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pnlTimeDisplay.Location = new System.Drawing.Point(3, 111);
+            this.pnlTimeDisplay.Name = "pnlTimeDisplay";
+            this.pnlTimeDisplay.Size = new System.Drawing.Size(397, 100);
+            this.pnlTimeDisplay.TabIndex = 1;
+            // 
+            // lbl_minutes
+            // 
+            this.lbl_minutes.Font = new System.Drawing.Font("Segoe UI Semibold", 44F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lbl_minutes.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(52)))), ((int)(((byte)(54)))));
+            this.lbl_minutes.Location = new System.Drawing.Point(10, 10);
+            this.lbl_minutes.Name = "lbl_minutes";
+            this.lbl_minutes.Size = new System.Drawing.Size(120, 80);
+            this.lbl_minutes.TabIndex = 0;
+            this.lbl_minutes.Text = "00";
+            this.lbl_minutes.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // labelColon
+            // 
+            this.labelColon.Font = new System.Drawing.Font("Segoe UI Semibold", 44F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelColon.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(52)))), ((int)(((byte)(54)))));
+            this.labelColon.Location = new System.Drawing.Point(135, 10);
+            this.labelColon.Name = "labelColon";
+            this.labelColon.Size = new System.Drawing.Size(40, 80);
+            this.labelColon.TabIndex = 1;
+            this.labelColon.Text = ":";
+            this.labelColon.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lbl_seconds
+            // 
+            this.lbl_seconds.Font = new System.Drawing.Font("Segoe UI Semibold", 44F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lbl_seconds.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(52)))), ((int)(((byte)(54)))));
+            this.lbl_seconds.Location = new System.Drawing.Point(180, 10);
+            this.lbl_seconds.Name = "lbl_seconds";
+            this.lbl_seconds.Size = new System.Drawing.Size(120, 80);
+            this.lbl_seconds.TabIndex = 2;
+            this.lbl_seconds.Text = "00";
+            this.lbl_seconds.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // pnlBottom
+            // 
+            this.pnlBottom.Controls.Add(this.lblHint);
+            this.pnlBottom.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pnlBottom.Location = new System.Drawing.Point(0, 480);
+            this.pnlBottom.Name = "pnlBottom";
+            this.pnlBottom.Size = new System.Drawing.Size(800, 120);
+            this.pnlBottom.TabIndex = 2;
+            // 
+            // lblHint
+            // 
+            this.lblHint.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblHint.Font = new System.Drawing.Font("微软雅黑", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblHint.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(99)))), ((int)(((byte)(110)))), ((int)(((byte)(114)))));
+            this.lblHint.Location = new System.Drawing.Point(0, 0);
+            this.lblHint.Name = "lblHint";
+            this.lblHint.Size = new System.Drawing.Size(800, 120);
+            this.lblHint.TabIndex = 0;
+            this.lblHint.Text = "💧 喝口水  🚶 走动一下  👀 远眺放松";
+            this.lblHint.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // RestFrm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.Green;
-            this.ClientSize = new System.Drawing.Size(1207, 647);
-            this.Controls.Add(this.label9);
-            this.Controls.Add(this.label8);
-            this.Controls.Add(this.label7);
-            this.Controls.Add(this.label6);
-            this.Controls.Add(this.label4);
-            this.Controls.Add(this.label5);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.lblText);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.lbl_minutes);
-            this.Controls.Add(this.lbl_seconds);
-            this.ForeColor = System.Drawing.Color.White;
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(249)))), ((int)(((byte)(250)))));
+            this.ClientSize = new System.Drawing.Size(800, 600);
+            this.Controls.Add(this.tableLayoutPanelMain);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "RestFrm";
-            this.Opacity = 0.75D;
+            this.Opacity = 0.92D;
             this.ShowInTaskbar = false;
             this.Text = "RestFrm";
+            this.TopMost = true;
             this.Load += new System.EventHandler(this.RestFrm_Load);
+            this.tableLayoutPanelMain.ResumeLayout(false);
+            this.pnlTop.ResumeLayout(false);
+            this.pnlCenter.ResumeLayout(false);
+            this.tableLayoutPanelCenter.ResumeLayout(false);
+            this.pnlIcon.ResumeLayout(false);
+            this.pnlTimer.ResumeLayout(false);
+            this.tableLayoutPanelTimer.ResumeLayout(false);
+            this.pnlTimeDisplay.ResumeLayout(false);
+            this.pnlBottom.ResumeLayout(false);
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
         #endregion
 
-        private System.Windows.Forms.Timer timerRst;
-        private System.Windows.Forms.Label lbl_seconds;
-        private System.Windows.Forms.Label lbl_minutes;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanelMain;
+        private System.Windows.Forms.Panel pnlTop;
         private System.Windows.Forms.Label lblText;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Panel pnlCenter;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanelCenter;
+        private System.Windows.Forms.Panel pnlIcon;
+        private System.Windows.Forms.Label lblIcon;
+        private System.Windows.Forms.Panel pnlTimer;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanelTimer;
+        private System.Windows.Forms.Label lblTimerTitle;
+        private System.Windows.Forms.Panel pnlTimeDisplay;
+        private System.Windows.Forms.Label lbl_minutes;
+        private System.Windows.Forms.Label labelColon;
+        private System.Windows.Forms.Label lbl_seconds;
+        private System.Windows.Forms.Panel pnlBottom;
+        private System.Windows.Forms.Label lblHint;
     }
 }

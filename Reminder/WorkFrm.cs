@@ -1,8 +1,8 @@
 using System;
 using System.Configuration;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace Reminder
@@ -11,12 +11,11 @@ namespace Reminder
     {
         private int wrk_minutes;//工作时间(分)
         private int wrk_seconds;//工作时间(秒)
-        private int wrk_m;
+        private int wrk_m;//原始工作分钟数，用于计算进度
         private int rst_minutes;//休息时间(分)
         private bool input_flag;//是否选中锁定键盘
         private bool left_flag;//鼠标左键是否点击
         private Point mouseoff;
-        private RestFrm[] restFrms;
         private static bool isRunning = false;
 
         public WorkFrm()
@@ -24,7 +23,9 @@ namespace Reminder
             InitializeComponent();
         }
 
-        // 20250507- 1、添加了对配置值的验证逻辑，确保WorkTimeValue和RestTimeValue必须是正数,2、- 对于工作时间添加了上限验证（8小时），防止设置过长的工作时间
+        /// <summary>
+        /// 从配置文件读取值，并验证合法性
+        /// </summary>
         private int GetConfigValue(string key, int defaultValue)
         {
             var value = ConfigurationManager.AppSettings[key];
@@ -42,7 +43,7 @@ namespace Reminder
                     return defaultValue;
                 }
 
-                // 对于工作时间，可以设置最大限制（如480分钟=8小时）
+                // 对于工作时间，设置最大限制（480分钟=8小时）
                 if (key == "WorkTimeValue" && result > 480)
                 {
                     LogException(new ArgumentException("工作时间不能超过8小时"), "配置验证");
@@ -52,19 +53,14 @@ namespace Reminder
 
             return result;
         }
-        private int GetConfigValue_20250507(string key, int defaultValue)
-        {
-            var value = ConfigurationManager.AppSettings[key];
-            return int.TryParse(value, out int result) ? result : defaultValue;
-        }
-        //定义一个构造函数，接受前一个窗体传来的参数
+
+        /// <summary>
+        /// 无参数构造函数 - 从配置文件读取并自动计算倒计时
+        /// </summary>
         public WorkFrm(int wrk_minutes, int rst_minutes)
         {
-
             try
             {
-                // 20250402，添加异常捕获，以便记录异常日志
-
                 InitializeComponent();
 
                 // 获取当前时间
@@ -72,8 +68,6 @@ namespace Reminder
 
                 // 根据配置文件的WorkTimeValue，计算下一个时间点
                 // 倒计时逻辑：基于"启动小时的整点 + 工作时长"来计算提醒时间
-                // 例如：设置工作45分钟，9:11启动 → 提醒时间是9:45 → 倒计时34分钟
-                // 例如：设置工作90分钟，9:10启动 → 提醒时间是10:30 → 倒计时80分钟
                 int workTimeValue = GetConfigValue("WorkTimeValue", 45);
                 int restTimeValue = GetConfigValue("RestTimeValue", 15);
 
@@ -83,15 +77,13 @@ namespace Reminder
                 // 提醒时间 = 当前小时整点 + 工作时长
                 DateTime nextBreakTime = hourStart.AddMinutes(workTimeValue);
 
-                // 如果计算出的提醒时间已经过去了（比如工作时长超过60分钟且当前时间已超过），则取下一个周期
+                // 如果计算出的提醒时间已经过去了，则取下一个周期
                 if (nextBreakTime <= now)
                 {
-                    // 提醒时间已过期，说明已经进入了下一个周期或应该立即提醒
-                    // 这种情况下，使用完整的工作时长作为倒计时（从当前时刻开始一个新的完整周期）
                     nextBreakTime = now.AddMinutes(workTimeValue);
                 }
 
-                // 计算时间差，精确到毫秒
+                // 计算时间差
                 TimeSpan timeDiff = nextBreakTime - now;
                 double totalMilliseconds = timeDiff.TotalMilliseconds;
                 this.wrk_minutes = (int)(totalMilliseconds / 60000);
@@ -100,40 +92,22 @@ namespace Reminder
                 this.wrk_m = workTimeValue;
                 this.input_flag = false;
 
-                // 读取 WorkFormScreen 配置项，若不存在则默认显示在第一个屏幕
-                int screenIndex = GetConfigValue("WorkFormScreen", 0);
-                Screen[] screens = Screen.AllScreens;
-
-                // 确保屏幕索引在有效范围内
-                if (screenIndex < 0 || screenIndex >= screens.Length)
-                {
-                    screenIndex = 0;
-                }
-
-                Screen selectedScreen = screens[screenIndex];
-                // 读取配置文件中的偏移量
-                int offsetX = GetConfigValue("WorkFormOffsetX", 160);
-                int offsetY = GetConfigValue("WorkFormOffsetY", 90);
-                // 计算窗体的位置   
-                int x = selectedScreen.WorkingArea.Right - offsetX;
-                int y = selectedScreen.WorkingArea.Bottom - offsetY;
-                Point p = new Point(x, y);
-                this.PointToScreen(p);
-                this.Location = p;
+                // 设置窗体位置
+                SetFormPosition();
                 isRunning = true;
             }
             catch (Exception ex)
             {
-                // 记录异常日志
                 LogException(ex, "构造函数异常");
-
-                // 重新抛出异常以保持原有行为
                 throw;
             }
         }
+
+        /// <summary>
+        /// 带参数的构造函数 - 使用指定的工作时间
+        /// </summary>
         public WorkFrm(int wrk_minutes, int rst_minutes, bool input_flag)
         {
-            // 20250402，添加异常捕获，以便记录异常日志
             try
             {
                 InitializeComponent();
@@ -141,37 +115,97 @@ namespace Reminder
                 this.rst_minutes = rst_minutes;
                 this.wrk_m = wrk_minutes;
                 this.input_flag = input_flag;
-                // bool hideWindow = ConfigurationManager.AppSettings["ShowTimerWindow"] == "1";
 
-                // 使用与第一个构造函数相同的多屏幕配置逻辑
-                int screenIndex = GetConfigValue("WorkFormScreen", 0);
-                Screen[] screens = Screen.AllScreens;
-
-                // 确保屏幕索引在有效范围内
-                if (screenIndex < 0 || screenIndex >= screens.Length)
-                {
-                    screenIndex = 0;
-                }
-
-                Screen selectedScreen = screens[screenIndex];
-                // 读取配置文件中的偏移量
-                int offsetX = GetConfigValue("WorkFormOffsetX", 160);
-                int offsetY = GetConfigValue("WorkFormOffsetY", 90);
-                // 计算窗体的位置   
-                int x = selectedScreen.WorkingArea.Right - offsetX;
-                int y = selectedScreen.WorkingArea.Bottom - offsetY;
-                Point p = new Point(x, y);
-                this.PointToScreen(p);
-                this.Location = p;
+                // 设置窗体位置
+                SetFormPosition();
                 isRunning = true;
             }
             catch (Exception ex)
             {
-                // 记录异常日志
                 LogException(ex, "构造函数异常");
-
-                // 重新抛出异常以保持原有行为
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// 设置窗体在多显示器上的位置
+        /// </summary>
+        private void SetFormPosition()
+        {
+            // 尝试加载用户保存的位置
+            if (LoadSavedPosition())
+                return;
+
+            // 使用默认位置计算
+            int screenIndex = GetConfigValue("WorkFormScreen", 0);
+            Screen[] screens = Screen.AllScreens;
+
+            if (screenIndex < 0 || screenIndex >= screens.Length)
+            {
+                screenIndex = 0;
+            }
+
+            Screen selectedScreen = screens[screenIndex];
+            int offsetX = GetConfigValue("WorkFormOffsetX", 160);
+            int offsetY = GetConfigValue("WorkFormOffsetY", 90);
+
+            int x = selectedScreen.WorkingArea.Right - offsetX;
+            int y = selectedScreen.WorkingArea.Bottom - offsetY;
+            this.Location = new Point(x, y);
+        }
+
+        /// <summary>
+        /// 尝试加载用户上次拖动的窗口位置
+        /// </summary>
+        private bool LoadSavedPosition()
+        {
+            try
+            {
+                string settingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "window_position.txt");
+                if (!File.Exists(settingsPath))
+                    return false;
+
+                string[] lines = File.ReadAllLines(settingsPath);
+                if (lines.Length < 2)
+                    return false;
+
+                if (int.TryParse(lines[0], out int x) && int.TryParse(lines[1], out int y))
+                {
+                    // 验证位置是否在任何屏幕范围内
+                    foreach (Screen screen in Screen.AllScreens)
+                    {
+                        if (screen.WorkingArea.Contains(x, y))
+                        {
+                            this.Location = new Point(x, y);
+                            return true;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogException(ex, "加载窗口位置失败");
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 保存当前窗口位置到文件
+        /// </summary>
+        private void SavePosition()
+        {
+            try
+            {
+                string settingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "window_position.txt");
+                File.WriteAllLines(settingsPath, new[]
+                {
+                    this.Location.X.ToString(),
+                    this.Location.Y.ToString()
+                });
+            }
+            catch (Exception ex)
+            {
+                LogException(ex, "保存窗口位置失败");
             }
         }
 
@@ -188,26 +222,31 @@ namespace Reminder
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            if (wrk_seconds >= 10)
-            {
-                lblSecond.Text = wrk_seconds.ToString();
-            }
-            else
-            {
-                lblSecond.Text = "0" + wrk_seconds.ToString();
-            }
+            // 初始化显示
+            lblSecond.Text = wrk_seconds.ToString("D2");
+            lblMin.Text = wrk_minutes.ToString("D2");
 
-            if (wrk_minutes >= 10)
-            {
-                lblMin.Text = wrk_minutes.ToString();
-            }
-            else
-            {
-                lblMin.Text = "0" + wrk_minutes.ToString();
-            }
+            // 设置圆角效果
+            this.Opacity = 0.95;
+            ApplyRoundedCorners();
+        }
 
-            this.Opacity = 0.8;
-
+        /// <summary>
+        /// 设置圆角效果
+        /// </summary>
+        private void ApplyRoundedCorners()
+        {
+            int radius = 12;
+            using (GraphicsPath path = new GraphicsPath())
+            {
+                Rectangle rect = new Rectangle(0, 0, this.Width, this.Height);
+                path.AddArc(rect.X, rect.Y, radius * 2, radius * 2, 180, 90);
+                path.AddArc(rect.Right - radius * 2, rect.Y, radius * 2, radius * 2, 270, 90);
+                path.AddArc(rect.Right - radius * 2, rect.Bottom - radius * 2, radius * 2, radius * 2, 0, 90);
+                path.AddArc(rect.X, rect.Bottom - radius * 2, radius * 2, radius * 2, 90, 90);
+                path.CloseFigure();
+                this.Region = new Region(path);
+            }
         }
 
         private void Timer1_Tick(object sender, EventArgs e)
@@ -221,14 +260,13 @@ namespace Reminder
                 }
                 else
                 {
-                    // 秒数为0时，更新分钟数
                     wrk_minutes--;
                     wrk_seconds = 59;
                 }
 
                 // 更新显示
-                lblSecond.Text = wrk_seconds.ToString("00");
-                lblMin.Text = wrk_minutes.ToString("00");
+                lblSecond.Text = wrk_seconds.ToString("D2");
+                lblMin.Text = wrk_minutes.ToString("D2");
 
                 // 检查是否需要提醒
                 Warn();
@@ -240,7 +278,7 @@ namespace Reminder
                     this.Close();
 
                     // 在多显示器上显示休息提醒
-                    restFrms = new RestFrm[Screen.AllScreens.Length];
+                    RestFrm[] restFrms = new RestFrm[Screen.AllScreens.Length];
                     for (int i = 0; i < Screen.AllScreens.Length; i++)
                     {
                         var screen = Screen.AllScreens[i];
@@ -251,7 +289,6 @@ namespace Reminder
             }
             catch (Exception ex)
             {
-                // 记录日志或处理异常
                 LogException(ex, "Timer error");
                 timerWrk.Stop();
             }
@@ -266,16 +303,20 @@ namespace Reminder
             {
                 btnDelay.Visible = false;
                 btnPause.Visible = false;
-                this.BackColor = Color.Red;
-                lblWarn.ForeColor = Color.Yellow;
-                lblWarn.Text = "该起来站\r\n站了，久\r\n坐对身体\r\n不好！";
-                int x = (System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Size.Width) / 2 - this.Width / 2;
-                int y = (System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Size.Height) / 2 - this.Height / 2;
-                Point p = new Point(x, y);
-                this.PointToScreen(p);
-                this.Location = p;
-            }
+                this.BackColor = Color.FromArgb(231, 76, 60); // 柔和红色
+                lblWarn.ForeColor = Color.White;
+                lblWarn.Text = "⚠️ 该起来了！";
+                lblProgress.Text = "即将锁定...";
+                lblProgress.ForeColor = Color.White;
+                lblMin.ForeColor = Color.White;
+                lblSecond.ForeColor = Color.White;
+                labelColon.ForeColor = Color.White;
 
+                // 居中显示
+                int x = (Screen.PrimaryScreen.WorkingArea.Size.Width) / 2 - this.Width / 2;
+                int y = (Screen.PrimaryScreen.WorkingArea.Size.Height) / 2 - this.Height / 2;
+                this.Location = new Point(x, y);
+            }
         }
 
         /// <summary>
@@ -294,32 +335,34 @@ namespace Reminder
             }
         }
 
-
         private void mouseDown(MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
             {
                 mouseoff = new Point(e.X, e.Y);
                 left_flag = true;
-
             }
         }
+
         private void mouseMove()
         {
             if (left_flag)
             {
                 Point mouseSet = Control.MousePosition;
-                mouseSet.Offset(-mouseoff.X, -mouseoff.Y);//这里注意下-的用意，offset
+                mouseSet.Offset(-mouseoff.X, -mouseoff.Y);
                 Location = mouseSet;
             }
         }
+
         private void mouseUp()
         {
             if (left_flag)
             {
                 left_flag = false;
+                SavePosition();
             }
         }
+
         private void WorkFrm_MouseDown(object sender, MouseEventArgs e)
         {
             mouseDown(e);
@@ -335,20 +378,13 @@ namespace Reminder
             mouseUp();
         }
 
-        private void LblSecond_Click(object sender, EventArgs e)
-        {
-            // 空实现，仅用于满足事件绑定
-        }
-
-        private void MainFrm_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            // 空实现，仅用于满足事件绑定
-        }
-
+        /// <summary>
+        /// 推迟10分钟按钮 - 修复：固定增加10分钟
+        /// </summary>
         private void button1_Click(object sender, EventArgs e)
         {
-            // 推迟
-            WorkFrm workFrm = new WorkFrm(wrk_minutes += 10, rst_minutes, input_flag);
+            // 创建新的倒计时窗口，从当前时间再增加10分钟
+            WorkFrm workFrm = new WorkFrm(wrk_minutes + 10, rst_minutes, input_flag);
             workFrm.Show();
             this.Close();
         }
@@ -358,12 +394,13 @@ namespace Reminder
             this.timerWrk.Enabled = !this.timerWrk.Enabled;
             if (this.timerWrk.Enabled)
             {
-                btnPause.Text = "暂停计时";
+                btnPause.Text = "暂停";
+                lblProgress.Text = "工作中...";
             }
             else
             {
-                btnPause.Text = "恢复计时";
-
+                btnPause.Text = "继续";
+                lblProgress.Text = "已暂停";
             }
         }
 
@@ -375,9 +412,17 @@ namespace Reminder
             string logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt");
             string logMessage = $"[{DateTime.Now}] {context}: {ex.Message}\nStackTrace: {ex.StackTrace}\n\n";
             File.AppendAllText(logPath, logMessage);
-
-            // 同时输出到控制台以便调试
             Console.WriteLine($"{context}: {ex.Message}");
+        }
+
+        private void LblSecond_Click(object sender, EventArgs e)
+        {
+            // 空实现，仅用于满足事件绑定
+        }
+
+        private void MainFrm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // 空实现，仅用于满足事件绑定
         }
     }
 }

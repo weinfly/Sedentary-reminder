@@ -130,39 +130,29 @@ namespace Reminder
         }
         private void MainMenuItemClick(object sender, EventArgs e)
         {
+            this.Opacity = 1;
+            this.ShowInTaskbar = true;
             this.Visible = true;
             this.WindowState = FormWindowState.Normal;
-            if (wrkFrm != null)
-            {
-                wrkFrm.Close();
-            }
+            this.BringToFront();
         }
         private void 主窗体ToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            this.Opacity = 1;
+            this.ShowInTaskbar = true;
             this.Visible = true;
             this.WindowState = FormWindowState.Normal;
-            if (wrkFrm != null)
-            {
-                wrkFrm.Close();
-            }
+            this.BringToFront();
         }
 
         private void MainFrm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            //取消关闭窗口
+            //取消关闭窗口，仅隐藏主窗口
             e.Cancel = true;
             //不在系统任务栏显示主窗口图标
             this.ShowInTaskbar = false;
+            this.Opacity = 0;
             this.Hide();
-
-            // 关闭所有 WorkFrm 窗口
-            foreach (Form form in Application.OpenForms)
-            {
-                if (form is WorkFrm)
-                {
-                    form.Close();
-                }
-            }
         }
 
         private void 退出ToolStripMenuItem_Click(object sender, EventArgs e)

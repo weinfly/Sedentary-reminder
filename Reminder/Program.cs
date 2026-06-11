@@ -69,7 +69,12 @@ namespace Reminder
             mainForm.Opacity = 0;
 
             InitializeTimers(config);
-            ShowInitialWorkForm(config);
+
+            // 在主窗体加载完成后启动倒计时窗口
+            mainForm.Load += (sender, e) =>
+            {
+                ShowInitialWorkForm(config, mainForm);
+            };
 
             Application.Run(mainForm);
         }
@@ -89,13 +94,21 @@ namespace Reminder
             return timer;
         }
 
-        private static void ShowInitialWorkForm(Configuration config)
+        private static void ShowInitialWorkForm(Configuration config, MainFrm mainForm)
         {
             // 周末不自动启动
-            if (DateTime.Now.DayOfWeek != DayOfWeek.Saturday && DateTime.Now.DayOfWeek != DayOfWeek.Sunday)
-            {
-                CheckAndStartWorkFrm(config);
-            }
+            if (DateTime.Now.DayOfWeek == DayOfWeek.Saturday || DateTime.Now.DayOfWeek == DayOfWeek.Sunday)
+                return;
+
+            // 检查是否在自动停止时间段内，如果是则不启动
+            var stopHours = GetConfigValues(config, "AutoStopHours");
+            if (stopHours.Count == 0) stopHours = DEFAULT_STOP_HOURS;
+            if (stopHours.Contains(DateTime.Now.Hour))
+                return;
+
+            // 启动时始终显示倒计时窗口，不限制必须在启动小时内
+            CleanupExistingForms();
+            StartNewWorkForm(config, mainForm);
         }
 
         private static MainFrm CreateMainForm(Configuration config)
@@ -173,7 +186,7 @@ namespace Reminder
             }
         }
 
-        private static void StartNewWorkForm(Configuration config)
+        private static void StartNewWorkForm(Configuration config, Form invokeForm = null)
         {
             try
             {
@@ -182,7 +195,7 @@ namespace Reminder
                 var workTime = GetConfigValue(config, "WorkTimeValue", DEFAULT_WORK_TIME);
                 var restTime = GetConfigValue(config, "RestTimeValue", DEFAULT_REST_TIME);
 
-                if (TryCreateWorkForm(workTime, restTime))
+                if (TryCreateWorkForm(workTime, restTime, invokeForm))
                 {
                     Logger.Log("WorkFrm倒计时窗口启动成功");
                     SetupFormClosedHandlers();
@@ -198,7 +211,7 @@ namespace Reminder
             }
         }
 
-        private static bool TryCreateWorkForm(int workTime, int restTime)
+        private static bool TryCreateWorkForm(int workTime, int restTime, Form invokeForm = null)
         {
             int retryCount = 0;
             bool windowExists = false;
@@ -207,7 +220,7 @@ namespace Reminder
             {
                 lock (_lock)
                 {
-                    activeWorkFrm = CreateAndShowWorkForm(workTime, restTime);
+                    activeWorkFrm = CreateAndShowWorkForm(workTime, restTime, invokeForm);
                 }
 
                 Thread.Sleep(500);
@@ -224,13 +237,15 @@ namespace Reminder
             return windowExists;
         }
 
-        private static WorkFrm CreateAndShowWorkForm(int workTime, int restTime)
+        private static WorkFrm CreateAndShowWorkForm(int workTime, int restTime, Form invokeForm = null)
         {
             WorkFrm form = null;
-            if (Application.OpenForms.Count > 0)
+            // 优先使用传入的窗体进行Invoke，其次尝试Application.OpenForms
+            Form targetForm = invokeForm ?? (Application.OpenForms.Count > 0 ? Application.OpenForms[0] : null);
+
+            if (targetForm != null && targetForm.IsHandleCreated)
             {
-                var mainForm = Application.OpenForms[0];
-                mainForm.Invoke((Action)(() =>
+                targetForm.Invoke((Action)(() =>
                 {
                     form = new WorkFrm(workTime, restTime);
                     form.TopMost = true;
