@@ -18,9 +18,11 @@ namespace Reminder
         private int wrk_m;
         private bool input_flag;
         private int rst_s;
+        private int total_seconds; // 总秒数，用于计算进度
         private System.Windows.Forms.Timer countdownTimer;
         private bool main_screen;
         private Point originalLocation;
+        private bool colonVisible = true; // 冒号闪烁状态
 
         public RestFrm(int rst_minutes, int wrk_minutes, bool input_flag, bool main_screen, Point location)
         {
@@ -28,6 +30,7 @@ namespace Reminder
             this.rst_m = rst_minutes;
             this.rst_s = 0;
             this.wrk_m = wrk_minutes;
+            this.total_seconds = rst_minutes * 60; // 记录总秒数
             this.input_flag = input_flag;
             this.main_screen = main_screen;
             this.originalLocation = location;
@@ -82,6 +85,10 @@ namespace Reminder
 
         private void CountdownTimer_Tick(object sender, EventArgs e)
         {
+            // 闪烁冒号
+            colonVisible = !colonVisible;
+            labelColon.Visible = colonVisible;
+
             if (rst_s > 0 || rst_m > 0)
             {
                 if (rst_s == 0)
@@ -94,6 +101,7 @@ namespace Reminder
                     rst_s--;
                 }
                 UpdateTimeLabels();
+                UpdateProgress();
             }
             else
             {
@@ -118,6 +126,36 @@ namespace Reminder
         {
             lbl_seconds.Text = rst_s.ToString("D2");
             lbl_minutes.Text = rst_m.ToString("D2");
+
+            // 秒数跳动动画：短暂放大
+            AnimateSecondsTick();
+        }
+
+        private void UpdateProgress()
+        {
+            if (total_seconds <= 0) return;
+            int remaining = rst_m * 60 + rst_s;
+            int elapsed = total_seconds - remaining;
+            int percent = (int)((double)elapsed / total_seconds * 100);
+            progressBar.Value = Math.Min(100, Math.Max(0, percent));
+        }
+
+        private void AnimateSecondsTick()
+        {
+            // 短暂放大字体再恢复，产生跳动效果
+            var originalFont = lbl_seconds.Font;
+            var biggerFont = new Font(originalFont.FontFamily, originalFont.Size * 1.08f, originalFont.Style);
+            lbl_seconds.Font = biggerFont;
+
+            var animTimer = new System.Windows.Forms.Timer { Interval = 200 };
+            animTimer.Tick += (s, args) =>
+            {
+                lbl_seconds.Font = originalFont;
+                biggerFont.Dispose();
+                animTimer.Stop();
+                animTimer.Dispose();
+            };
+            animTimer.Start();
         }
 
         private void ShowRestEndMessage()
@@ -154,7 +192,7 @@ namespace Reminder
                     Text = "休息结束",
                     TopMost = true,
                     ControlBox = false,
-                    BackColor = Color.FromArgb(74, 144, 217) // 清新蓝色
+                    BackColor = Color.FromArgb(76, 175, 80) // 绿色
                 };
 
                 // 创建计时器

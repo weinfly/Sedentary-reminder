@@ -1,16 +1,17 @@
 using System;
 using System.Configuration;
+using System.Diagnostics;
 using System.ServiceProcess;
 using System.Timers;
-using System.Windows.Forms;
 
 namespace Reminder
 {
     public class ReminderService : ServiceBase
     {
-        private Timer _timer;
+        private System.Timers.Timer _timer;
         private DateTime _startTime;
         private DateTime _endTime;
+        private bool _shouldShowReminder;
 
         public ReminderService()
         {
@@ -18,7 +19,6 @@ namespace Reminder
             CanStop = true;
             CanPauseAndContinue = false;
             AutoLog = true;
-            this.serviceProcessInstaller1.Account = ServiceAccount.LocalSystem;
         }
 
         protected override void OnStart(string[] args)
@@ -37,13 +37,16 @@ namespace Reminder
                 var interval = int.TryParse(ConfigurationManager.AppSettings["CheckInterval"], out var intervalValue)
                     ? intervalValue
                     : 60000;
-                _timer = new Timer(interval);
+
+                _timer = new System.Timers.Timer(interval);
                 _timer.Elapsed += OnTimerElapsed;
+                _timer.AutoReset = true;
                 _timer.Start();
+
+                EventLog.WriteEntry(ServiceName, "Service started successfully.", EventLogEntryType.Information);
             }
             catch (Exception ex)
             {
-                // 记录日志或处理异常
                 EventLog.WriteEntry(ServiceName, $"Service start failed: {ex.Message}", EventLogEntryType.Error);
                 throw;
             }
@@ -51,8 +54,13 @@ namespace Reminder
 
         protected override void OnStop()
         {
-            _timer.Stop();
-            _timer.Dispose();
+            if (_timer != null)
+            {
+                _timer.Stop();
+                _timer.Dispose();
+            }
+
+            EventLog.WriteEntry(ServiceName, "Service stopped.", EventLogEntryType.Information);
         }
 
         private void OnTimerElapsed(object sender, ElapsedEventArgs e)
@@ -60,19 +68,61 @@ namespace Reminder
             try
             {
                 var now = DateTime.Now;
-                if (now >= _startTime && now <= _endTime)
+
+                // 检查是否在工作时间内
+                if (now.TimeOfDay >= _startTime.TimeOfDay && now.TimeOfDay <= _endTime.TimeOfDay)
                 {
-                    // 使用线程启动窗体
-                    new Thread(() => 
+                    // 周末不提醒
+                    if (now.DayOfWeek == DayOfWeek.Saturday || now.DayOfWeek == DayOfWeek.Sunday)
+                        return;
+
+                    // 检查是否需要显示提醒（每分钟的第0秒触发，避免重复）
+                    if (now.Second == 0 && !_shouldShowReminder)
                     {
-                        var form = new WorkFrm();
-                        Application.Run(form);
-                    }).Start();
+                        // 通过事件日志记录提醒
+                        EventLog.WriteEntry(ServiceName, $"Reminding user to take a break at {now:HH:mm:ss}", EventLogEntryType.Information);
+
+                        // 尝试以交互式用户身份启动提醒窗口
+                        TryLaunchReminderWindow();
+                    }
                 }
             }
             catch (Exception ex)
             {
                 EventLog.WriteEntry(ServiceName, $"Timer elapsed error: {ex.Message}", EventLogEntryType.Error);
+            }
+        }
+
+        private void TryLaunchReminderWindow()
+        {
+            try
+            {
+                // 获取当前可执行文件路径
+                var exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+
+                // 使用 schtasks 以当前登录用户的会话启动程序
+                // 这样可以绕过 Session 0 隔离限制
+                var processStartInfo = new ProcessStartInfo
+                {
+                    FileName = "schtasks",
+                    Arguments = $"/create /tn \"SedentaryReminder_Popup\" /tr \"{exePath}\" /sc once /st {DateTime.Now.AddSeconds(1):HH:mm} /f",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                Process.Start(processStartInfo).WaitForExit();
+
+                // 立即运行任务
+                processStartInfo.Arguments = $"/run /tn \"SedentaryReminder_Popup\"";
+                Process.Start(processStartInfo).WaitForExit();
+
+                // 删除临时任务
+                processStartInfo.Arguments = $"/delete /tn \"SedentaryReminder_Popup\" /f";
+                Process.Start(processStartInfo).WaitForExit();
+            }
+            catch (Exception ex)
+            {
+                EventLog.WriteEntry(ServiceName, $"Failed to launch reminder window: {ex.Message}", EventLogEntryType.Warning);
             }
         }
     }

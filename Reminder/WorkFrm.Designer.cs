@@ -64,7 +64,7 @@ namespace Reminder
             this.pnlMain.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlMain.Location = new System.Drawing.Point(0, 0);
             this.pnlMain.Name = "pnlMain";
-            this.pnlMain.Size = new System.Drawing.Size(200, 140);
+            this.pnlMain.Size = new System.Drawing.Size(300, 140);
             this.pnlMain.TabIndex = 0;
             // 
             // tableLayoutPanel1
@@ -81,7 +81,7 @@ namespace Reminder
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(200, 140);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(300, 140);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // pnlTop
@@ -90,19 +90,19 @@ namespace Reminder
             this.pnlTop.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlTop.Location = new System.Drawing.Point(3, 3);
             this.pnlTop.Name = "pnlTop";
-            this.pnlTop.Size = new System.Drawing.Size(194, 28);
+            this.pnlTop.Size = new System.Drawing.Size(294, 28);
             this.pnlTop.TabIndex = 0;
             // 
             // lblWarn
             // 
             this.lblWarn.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblWarn.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblWarn.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(74)))), ((int)(((byte)(144)))), ((int)(((byte)(217)))));
+            this.lblWarn.ForeColor = System.Drawing.Color.White;
             this.lblWarn.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.lblWarn.Location = new System.Drawing.Point(0, 0);
             this.lblWarn.Name = "lblWarn";
             this.lblWarn.Padding = new System.Windows.Forms.Padding(3, 0, 0, 0);
-            this.lblWarn.Size = new System.Drawing.Size(194, 28);
+            this.lblWarn.Size = new System.Drawing.Size(294, 28);
             this.lblWarn.TabIndex = 0;
             this.lblWarn.Text = " ⏰ 注意坐姿";
             this.lblWarn.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -116,7 +116,7 @@ namespace Reminder
             this.pnlCenter.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlCenter.Location = new System.Drawing.Point(3, 37);
             this.pnlCenter.Name = "pnlCenter";
-            this.pnlCenter.Size = new System.Drawing.Size(194, 65);
+            this.pnlCenter.Size = new System.Drawing.Size(294, 65);
             this.pnlCenter.TabIndex = 1;
             // 
             // tableLayoutPanel2
@@ -133,17 +133,17 @@ namespace Reminder
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             this.tableLayoutPanel2.RowCount = 1;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(194, 65);
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(294, 65);
             this.tableLayoutPanel2.TabIndex = 0;
             // 
             // lblMin
             // 
             this.lblMin.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblMin.Font = new System.Drawing.Font("Segoe UI Semibold", 28F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblMin.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(52)))), ((int)(((byte)(54)))));
+            this.lblMin.ForeColor = System.Drawing.Color.White;
             this.lblMin.Location = new System.Drawing.Point(3, 0);
             this.lblMin.Name = "lblMin";
-            this.lblMin.Size = new System.Drawing.Size(74, 65);
+            this.lblMin.Size = new System.Drawing.Size(110, 65);
             this.lblMin.TabIndex = 0;
             this.lblMin.Text = "00";
             this.lblMin.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -155,10 +155,10 @@ namespace Reminder
             // 
             this.labelColon.Dock = System.Windows.Forms.DockStyle.Fill;
             this.labelColon.Font = new System.Drawing.Font("Segoe UI Semibold", 28F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelColon.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(52)))), ((int)(((byte)(54)))));
-            this.labelColon.Location = new System.Drawing.Point(77, 0);
+            this.labelColon.ForeColor = System.Drawing.Color.White;
+            this.labelColon.Location = new System.Drawing.Point(113, 0);
             this.labelColon.Name = "labelColon";
-            this.labelColon.Size = new System.Drawing.Size(35, 65);
+            this.labelColon.Size = new System.Drawing.Size(52, 65);
             this.labelColon.TabIndex = 1;
             this.labelColon.Text = ":";
             this.labelColon.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -170,10 +170,10 @@ namespace Reminder
             // 
             this.lblSecond.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblSecond.Font = new System.Drawing.Font("Segoe UI Semibold", 28F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblSecond.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(52)))), ((int)(((byte)(54)))));
-            this.lblSecond.Location = new System.Drawing.Point(115, 0);
+            this.lblSecond.ForeColor = System.Drawing.Color.White;
+            this.lblSecond.Location = new System.Drawing.Point(168, 0);
             this.lblSecond.Name = "lblSecond";
-            this.lblSecond.Size = new System.Drawing.Size(76, 65);
+            this.lblSecond.Size = new System.Drawing.Size(112, 65);
             this.lblSecond.TabIndex = 2;
             this.lblSecond.Text = "00";
             this.lblSecond.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -189,21 +189,21 @@ namespace Reminder
             this.pnlBottom.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlBottom.Location = new System.Drawing.Point(3, 108);
             this.pnlBottom.Name = "pnlBottom";
-            this.pnlBottom.Size = new System.Drawing.Size(194, 29);
+            this.pnlBottom.Size = new System.Drawing.Size(294, 29);
             this.pnlBottom.TabIndex = 2;
             // 
             // btnPause
             // 
             this.btnPause.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnPause.BackColor = System.Drawing.Color.White;
+            this.btnPause.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(174)))), ((int)(((byte)(96)))));
             this.btnPause.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.btnPause.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnPause.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(74)))), ((int)(((byte)(144)))), ((int)(((byte)(217)))));
+            this.btnPause.FlatAppearance.BorderColor = System.Drawing.Color.White;
             this.btnPause.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnPause.Font = new System.Drawing.Font("微软雅黑", 7.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btnPause.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(74)))), ((int)(((byte)(144)))), ((int)(((byte)(217)))));
-            this.btnPause.Location = new System.Drawing.Point(95, 3);
+            this.btnPause.ForeColor = System.Drawing.Color.White;
+            this.btnPause.Location = new System.Drawing.Point(149, 3);
             this.btnPause.Name = "btnPause";
             this.btnPause.Size = new System.Drawing.Size(48, 23);
             this.btnPause.TabIndex = 1;
@@ -215,13 +215,13 @@ namespace Reminder
             // 
             this.btnDelay.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnDelay.BackColor = System.Drawing.Color.White;
+            this.btnDelay.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(174)))), ((int)(((byte)(96)))));
             this.btnDelay.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnDelay.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(74)))), ((int)(((byte)(144)))), ((int)(((byte)(217)))));
+            this.btnDelay.FlatAppearance.BorderColor = System.Drawing.Color.White;
             this.btnDelay.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnDelay.Font = new System.Drawing.Font("微软雅黑", 7.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btnDelay.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(74)))), ((int)(((byte)(144)))), ((int)(((byte)(217)))));
-            this.btnDelay.Location = new System.Drawing.Point(149, 3);
+            this.btnDelay.ForeColor = System.Drawing.Color.White;
+            this.btnDelay.Location = new System.Drawing.Point(203, 3);
             this.btnDelay.Name = "btnDelay";
             this.btnDelay.Size = new System.Drawing.Size(42, 23);
             this.btnDelay.TabIndex = 0;
@@ -234,10 +234,10 @@ namespace Reminder
             this.lblProgress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
             | System.Windows.Forms.AnchorStyles.Left)));
             this.lblProgress.Font = new System.Drawing.Font("微软雅黑", 7.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblProgress.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(99)))), ((int)(((byte)(110)))), ((int)(((byte)(114)))));
+            this.lblProgress.ForeColor = System.Drawing.Color.White;
             this.lblProgress.Location = new System.Drawing.Point(3, 3);
             this.lblProgress.Name = "lblProgress";
-            this.lblProgress.Size = new System.Drawing.Size(89, 23);
+            this.lblProgress.Size = new System.Drawing.Size(139, 23);
             this.lblProgress.TabIndex = 2;
             this.lblProgress.Text = "工作中...";
             this.lblProgress.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -245,8 +245,8 @@ namespace Reminder
             // WorkFrm
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(249)))), ((int)(((byte)(250)))));
-            this.ClientSize = new System.Drawing.Size(200, 140);
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(76)))), ((int)(((byte)(175)))), ((int)(((byte)(80)))));
+            this.ClientSize = new System.Drawing.Size(300, 140);
             this.Controls.Add(this.pnlMain);
             this.Cursor = System.Windows.Forms.Cursors.SizeAll;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;

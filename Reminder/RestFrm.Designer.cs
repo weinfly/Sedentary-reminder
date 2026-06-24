@@ -45,6 +45,8 @@ namespace Reminder
             this.lbl_seconds = new System.Windows.Forms.Label();
             this.pnlBottom = new System.Windows.Forms.Panel();
             this.lblHint = new System.Windows.Forms.Label();
+            this.progressBar = new System.Windows.Forms.ProgressBar();
+            this.pnlProgress = new System.Windows.Forms.Panel();
             this.tableLayoutPanelMain.SuspendLayout();
             this.pnlTop.SuspendLayout();
             this.pnlCenter.SuspendLayout();
@@ -53,6 +55,7 @@ namespace Reminder
             this.pnlTimer.SuspendLayout();
             this.tableLayoutPanelTimer.SuspendLayout();
             this.pnlTimeDisplay.SuspendLayout();
+            this.pnlProgress.SuspendLayout();
             this.pnlBottom.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -62,14 +65,16 @@ namespace Reminder
             this.tableLayoutPanelMain.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanelMain.Controls.Add(this.pnlTop, 0, 0);
             this.tableLayoutPanelMain.Controls.Add(this.pnlCenter, 0, 1);
-            this.tableLayoutPanelMain.Controls.Add(this.pnlBottom, 0, 2);
+            this.tableLayoutPanelMain.Controls.Add(this.pnlProgress, 0, 2);
+            this.tableLayoutPanelMain.Controls.Add(this.pnlBottom, 0, 3);
             this.tableLayoutPanelMain.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanelMain.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanelMain.Name = "tableLayoutPanelMain";
-            this.tableLayoutPanelMain.RowCount = 3;
-            this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 60F));
-            this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanelMain.RowCount = 4;
+            this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 15F));
+            this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 55F));
+            this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
+            this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 30F));
             this.tableLayoutPanelMain.Size = new System.Drawing.Size(800, 600);
             this.tableLayoutPanelMain.TabIndex = 0;
             // 
@@ -86,7 +91,7 @@ namespace Reminder
             // 
             this.lblText.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblText.Font = new System.Drawing.Font("微软雅黑", 16F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblText.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(52)))), ((int)(((byte)(54)))));
+            this.lblText.ForeColor = System.Drawing.Color.White;
             this.lblText.Location = new System.Drawing.Point(0, 0);
             this.lblText.Name = "lblText";
             this.lblText.Size = new System.Drawing.Size(800, 120);
@@ -131,7 +136,7 @@ namespace Reminder
             // 
             this.lblIcon.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblIcon.Font = new System.Drawing.Font("微软雅黑", 80F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblIcon.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(52)))), ((int)(((byte)(54)))));
+            this.lblIcon.ForeColor = System.Drawing.Color.White;
             this.lblIcon.Location = new System.Drawing.Point(0, 0);
             this.lblIcon.Name = "lblIcon";
             this.lblIcon.Size = new System.Drawing.Size(397, 360);
@@ -167,7 +172,7 @@ namespace Reminder
             // 
             this.lblTimerTitle.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblTimerTitle.Font = new System.Drawing.Font("微软雅黑", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblTimerTitle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(52)))), ((int)(((byte)(54)))));
+            this.lblTimerTitle.ForeColor = System.Drawing.Color.White;
             this.lblTimerTitle.Location = new System.Drawing.Point(3, 0);
             this.lblTimerTitle.Name = "lblTimerTitle";
             this.lblTimerTitle.Size = new System.Drawing.Size(397, 108);
@@ -189,10 +194,10 @@ namespace Reminder
             // lbl_minutes
             // 
             this.lbl_minutes.Font = new System.Drawing.Font("Segoe UI Semibold", 44F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_minutes.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(52)))), ((int)(((byte)(54)))));
+            this.lbl_minutes.ForeColor = System.Drawing.Color.White;
             this.lbl_minutes.Location = new System.Drawing.Point(10, 10);
             this.lbl_minutes.Name = "lbl_minutes";
-            this.lbl_minutes.Size = new System.Drawing.Size(120, 80);
+            this.lbl_minutes.Size = new System.Drawing.Size(160, 80);
             this.lbl_minutes.TabIndex = 0;
             this.lbl_minutes.Text = "00";
             this.lbl_minutes.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -200,8 +205,8 @@ namespace Reminder
             // labelColon
             // 
             this.labelColon.Font = new System.Drawing.Font("Segoe UI Semibold", 44F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelColon.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(52)))), ((int)(((byte)(54)))));
-            this.labelColon.Location = new System.Drawing.Point(135, 10);
+            this.labelColon.ForeColor = System.Drawing.Color.White;
+            this.labelColon.Location = new System.Drawing.Point(175, 10);
             this.labelColon.Name = "labelColon";
             this.labelColon.Size = new System.Drawing.Size(40, 80);
             this.labelColon.TabIndex = 1;
@@ -211,19 +216,42 @@ namespace Reminder
             // lbl_seconds
             // 
             this.lbl_seconds.Font = new System.Drawing.Font("Segoe UI Semibold", 44F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbl_seconds.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(52)))), ((int)(((byte)(54)))));
-            this.lbl_seconds.Location = new System.Drawing.Point(180, 10);
+            this.lbl_seconds.ForeColor = System.Drawing.Color.White;
+            this.lbl_seconds.Location = new System.Drawing.Point(215, 10);
             this.lbl_seconds.Name = "lbl_seconds";
-            this.lbl_seconds.Size = new System.Drawing.Size(120, 80);
+            this.lbl_seconds.Size = new System.Drawing.Size(160, 80);
             this.lbl_seconds.TabIndex = 2;
             this.lbl_seconds.Text = "00";
             this.lbl_seconds.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // pnlProgress
+            // 
+            this.pnlProgress.Controls.Add(this.progressBar);
+            this.pnlProgress.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pnlProgress.Location = new System.Drawing.Point(100, 448);
+            this.pnlProgress.Name = "pnlProgress";
+            this.pnlProgress.Padding = new System.Windows.Forms.Padding(80, 8, 80, 8);
+            this.pnlProgress.Size = new System.Drawing.Size(600, 30);
+            this.pnlProgress.TabIndex = 3;
+            // 
+            // progressBar
+            // 
+            this.progressBar.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.progressBar.Location = new System.Drawing.Point(80, 8);
+            this.progressBar.Maximum = 100;
+            this.progressBar.Minimum = 0;
+            this.progressBar.Name = "progressBar";
+            this.progressBar.Size = new System.Drawing.Size(440, 14);
+            this.progressBar.Step = 1;
+            this.progressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            this.progressBar.TabIndex = 0;
+            this.progressBar.Value = 100;
             // 
             // pnlBottom
             // 
             this.pnlBottom.Controls.Add(this.lblHint);
             this.pnlBottom.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pnlBottom.Location = new System.Drawing.Point(0, 480);
+            this.pnlBottom.Location = new System.Drawing.Point(0, 478);
             this.pnlBottom.Name = "pnlBottom";
             this.pnlBottom.Size = new System.Drawing.Size(800, 120);
             this.pnlBottom.TabIndex = 2;
@@ -232,7 +260,7 @@ namespace Reminder
             // 
             this.lblHint.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblHint.Font = new System.Drawing.Font("微软雅黑", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblHint.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(99)))), ((int)(((byte)(110)))), ((int)(((byte)(114)))));
+            this.lblHint.ForeColor = System.Drawing.Color.White;
             this.lblHint.Location = new System.Drawing.Point(0, 0);
             this.lblHint.Name = "lblHint";
             this.lblHint.Size = new System.Drawing.Size(800, 120);
@@ -244,7 +272,7 @@ namespace Reminder
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(249)))), ((int)(((byte)(250)))));
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(76)))), ((int)(((byte)(175)))), ((int)(((byte)(80)))));
             this.ClientSize = new System.Drawing.Size(800, 600);
             this.Controls.Add(this.tableLayoutPanelMain);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
@@ -255,6 +283,7 @@ namespace Reminder
             this.TopMost = true;
             this.Load += new System.EventHandler(this.RestFrm_Load);
             this.tableLayoutPanelMain.ResumeLayout(false);
+            this.pnlProgress.ResumeLayout(false);
             this.pnlTop.ResumeLayout(false);
             this.pnlCenter.ResumeLayout(false);
             this.tableLayoutPanelCenter.ResumeLayout(false);
@@ -283,6 +312,8 @@ namespace Reminder
         private System.Windows.Forms.Label lbl_minutes;
         private System.Windows.Forms.Label labelColon;
         private System.Windows.Forms.Label lbl_seconds;
+        private System.Windows.Forms.Panel pnlProgress;
+        private System.Windows.Forms.ProgressBar progressBar;
         private System.Windows.Forms.Panel pnlBottom;
         private System.Windows.Forms.Label lblHint;
     }

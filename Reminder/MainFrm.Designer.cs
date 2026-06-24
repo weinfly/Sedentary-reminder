@@ -126,7 +126,7 @@ namespace Reminder
             // 
             // pnlHeader
             // 
-            this.pnlHeader.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(74)))), ((int)(((byte)(144)))), ((int)(((byte)(217)))));
+            this.pnlHeader.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(76)))), ((int)(((byte)(175)))), ((int)(((byte)(80)))));
             this.pnlHeader.Controls.Add(this.lblTitle);
             this.pnlHeader.Controls.Add(this.lblSubtitle);
             this.pnlHeader.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -196,7 +196,7 @@ namespace Reminder
             // lblTimerIcon
             // 
             this.lblTimerIcon.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblTimerIcon.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(74)))), ((int)(((byte)(144)))), ((int)(((byte)(217)))));
+            this.lblTimerIcon.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(76)))), ((int)(((byte)(175)))), ((int)(((byte)(80)))));
             this.lblTimerIcon.Location = new System.Drawing.Point(5, 5);
             this.lblTimerIcon.Name = "lblTimerIcon";
             this.lblTimerIcon.Size = new System.Drawing.Size(20, 20);
@@ -352,7 +352,7 @@ namespace Reminder
             // lblOptionsIcon
             // 
             this.lblOptionsIcon.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblOptionsIcon.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(74)))), ((int)(((byte)(144)))), ((int)(((byte)(217)))));
+            this.lblOptionsIcon.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(76)))), ((int)(((byte)(175)))), ((int)(((byte)(80)))));
             this.lblOptionsIcon.Location = new System.Drawing.Point(5, 5);
             this.lblOptionsIcon.Name = "lblOptionsIcon";
             this.lblOptionsIcon.Size = new System.Drawing.Size(20, 20);
@@ -377,7 +377,7 @@ namespace Reminder
             this.ckBoxInput.Checked = true;
             this.ckBoxInput.CheckState = System.Windows.Forms.CheckState.Checked;
             this.ckBoxInput.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.ckBoxInput.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(74)))), ((int)(((byte)(144)))), ((int)(((byte)(217)))));
+            this.ckBoxInput.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(76)))), ((int)(((byte)(175)))), ((int)(((byte)(80)))));
             this.ckBoxInput.Location = new System.Drawing.Point(8, 28);
             this.ckBoxInput.Name = "ckBoxInput";
             this.ckBoxInput.Size = new System.Drawing.Size(288, 35);
@@ -399,7 +399,7 @@ namespace Reminder
             // 
             // btn_start
             // 
-            this.btn_start.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(74)))), ((int)(((byte)(144)))), ((int)(((byte)(217)))));
+            this.btn_start.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(76)))), ((int)(((byte)(175)))), ((int)(((byte)(80)))));
             this.btn_start.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btn_start.FlatAppearance.BorderSize = 0;
             this.btn_start.FlatStyle = System.Windows.Forms.FlatStyle.Flat;

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.ServiceProcess;
 using System.Timers;
 using System.Windows.Forms;
 using System.Threading;
@@ -26,8 +27,18 @@ namespace Reminder
         private static WorkFrm activeWorkFrm;
         private static RestFrm activeRestFrm;
 
+        /// <summary>
+        /// The main entry point for the application.
+        /// </summary>
         [STAThread]
         static void Main()
+        {
+            // 始终作为 WinForms 应用程序运行
+            // Windows 服务不适合需要显示GUI的应用（Session 0 隔离）
+            RunAsApplication();
+        }
+
+        private static void RunAsApplication()
         {
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += (sender, e) =>
