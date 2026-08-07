@@ -42,6 +42,10 @@ namespace Reminder
             exitMenuItem.Click += 退出ToolStripMenuItem_Click;
             notifyIconContextMenu.Items.Add(exitMenuItem);
 
+            var statsMenuItem = new ToolStripMenuItem("📊 使用统计");
+            statsMenuItem.Click += StatsMenuItem_Click;
+            notifyIconContextMenu.Items.Add(statsMenuItem);
+
             // 锁定开关状态切换
             ckBoxInput.CheckedChanged += CkBoxInput_CheckedChanged;
 
@@ -52,16 +56,25 @@ namespace Reminder
             statusTimer = new Timer { Interval = 1000 };
             statusTimer.Tick += (s, e) => UpdateTrayStatus();
             statusTimer.Start();
+
+            // 主题变化（含跟随系统）时重绘主窗体
+            ThemeManager.ThemeChanged += OnThemeChanged;
         }
 
         private void MainFrm_Load(object sender, EventArgs e)
         {
+            ThemeManager.LoadMode();
             ApplyTheme();
             UpdateLockToggle();
 
             // 初始化“隐藏倒计时窗口”开关，并应用主题色
-            ckBoxHide.Checked = GetConfigInt("HideWorkForm", 0) == 1;
+            ckBoxHide.Checked = GetConfigInt("HideWorkForm", 1) == 1;
             UpdateHideToggle();
+
+            // 初始化主题选择控件
+            cmbTheme.Items.AddRange(new object[] { "☀ 浅色", "🌙 深色", "🖥 跟随系统" });
+            cmbTheme.SelectedIndex = (int)ThemeManager.Mode;
+            cmbTheme.SelectedIndexChanged += CmbTheme_SelectedIndexChanged;
 
             bool firstRun = !File.Exists(FirstRunFlagPath);
             if (firstRun)
@@ -203,8 +216,8 @@ namespace Reminder
             }
             else
             {
-                ckBoxInput.BackColor = Color.FromArgb(230, 230, 230);
-                ckBoxInput.ForeColor = ThemeManager.TextSecondary;
+                ckBoxInput.BackColor = ThemeManager.ControlFill;
+                ckBoxInput.ForeColor = ThemeManager.ControlText;
             }
         }
 
@@ -224,8 +237,8 @@ namespace Reminder
             }
             else
             {
-                ckBoxHide.BackColor = Color.FromArgb(230, 230, 230);
-                ckBoxHide.ForeColor = ThemeManager.TextSecondary;
+                ckBoxHide.BackColor = ThemeManager.ControlFill;
+                ckBoxHide.ForeColor = ThemeManager.ControlText;
             }
         }
 
@@ -239,6 +252,32 @@ namespace Reminder
             else
             {
                 notifyIcon1.Text = "久坐提醒 · 未开始";
+            }
+        }
+
+        private void OnThemeChanged(object sender, EventArgs e)
+        {
+            if (this.IsDisposed || this.Disposing) return;
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(new Action(ApplyTheme));
+                return;
+            }
+
+            ApplyTheme();
+        }
+
+        private void CmbTheme_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (cmbTheme.SelectedIndex < 0) return;
+            ThemeManager.Mode = (ThemeMode)cmbTheme.SelectedIndex;
+        }
+
+        private void StatsMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var frm = new StatsFrm())
+            {
+                frm.ShowDialog(this);
             }
         }
 
@@ -281,6 +320,15 @@ namespace Reminder
             ckBoxHide.FlatAppearance.BorderSize = 0;
             ckBoxHide.ThreeState = false;
             ckBoxHide.UseVisualStyleBackColor = false;
+
+            // 主题选择下拉框与数值框随主题取色
+            cmbTheme.BackColor = ThemeManager.Surface;
+            cmbTheme.ForeColor = ThemeManager.TextPrimary;
+            cmbTheme.FlatStyle = FlatStyle.Flat;
+            numWrkTime.BackColor = ThemeManager.Surface;
+            numWrkTime.ForeColor = ThemeManager.TextPrimary;
+            numRstTime.BackColor = ThemeManager.Surface;
+            numRstTime.ForeColor = ThemeManager.TextPrimary;
 
             StylePrimaryButton(btn_start);
         }

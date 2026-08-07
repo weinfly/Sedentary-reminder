@@ -58,6 +58,7 @@ namespace Reminder
             this.ckBoxHide = new System.Windows.Forms.CheckBox();
             this.pnlFooter = new System.Windows.Forms.Panel();
             this.btn_start = new System.Windows.Forms.Button();
+            this.cmbTheme = new System.Windows.Forms.ComboBox();
             this.contextMenuStrip1.SuspendLayout();
             this.tableLayoutPanelMain.SuspendLayout();
             this.pnlHeader.SuspendLayout();
@@ -122,7 +123,7 @@ namespace Reminder
             this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 65F));
             this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 60F));
-            this.tableLayoutPanelMain.Size = new System.Drawing.Size(340, 360);
+            this.tableLayoutPanelMain.Size = new System.Drawing.Size(340, 400);
             this.tableLayoutPanelMain.TabIndex = 0;
             // 
             // pnlHeader
@@ -165,7 +166,7 @@ namespace Reminder
             this.pnlBody.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(249)))), ((int)(((byte)(250)))));
             this.pnlBody.Name = "pnlBody";
             this.pnlBody.Padding = new System.Windows.Forms.Padding(15);
-            this.pnlBody.Size = new System.Drawing.Size(340, 235);
+            this.pnlBody.Size = new System.Drawing.Size(340, 275);
             this.pnlBody.TabIndex = 1;
             // 
             // tableLayoutPanelBody
@@ -180,7 +181,7 @@ namespace Reminder
             this.tableLayoutPanelBody.RowCount = 2;
             this.tableLayoutPanelBody.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanelBody.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanelBody.Size = new System.Drawing.Size(310, 205);
+            this.tableLayoutPanelBody.Size = new System.Drawing.Size(310, 245);
             this.tableLayoutPanelBody.TabIndex = 0;
             // 
             // pnlTimer
@@ -345,6 +346,7 @@ namespace Reminder
             this.pnlOptions.Controls.Add(this.lblOptionsTitle);
             this.pnlOptions.Controls.Add(this.ckBoxInput);
             this.pnlOptions.Controls.Add(this.ckBoxHide);
+            this.pnlOptions.Controls.Add(this.cmbTheme);
             this.pnlOptions.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlOptions.Location = new System.Drawing.Point(3, 78);
             this.pnlOptions.Name = "pnlOptions";
@@ -406,11 +408,21 @@ namespace Reminder
             this.ckBoxHide.UseVisualStyleBackColor = false;
             this.ckBoxHide.CheckedChanged += new System.EventHandler(this.CkBoxHide_CheckedChanged);
             // 
+            // cmbTheme
+            // 
+            this.cmbTheme.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbTheme.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.cmbTheme.FormattingEnabled = true;
+            this.cmbTheme.Location = new System.Drawing.Point(8, 98);
+            this.cmbTheme.Name = "cmbTheme";
+            this.cmbTheme.Size = new System.Drawing.Size(288, 23);
+            this.cmbTheme.TabIndex = 4;
+            // 
             // pnlFooter
             // 
             this.pnlFooter.Controls.Add(this.btn_start);
             this.pnlFooter.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pnlFooter.Location = new System.Drawing.Point(0, 260);
+            this.pnlFooter.Location = new System.Drawing.Point(0, 300);
             this.pnlFooter.Name = "pnlFooter";
             this.pnlFooter.Padding = new System.Windows.Forms.Padding(15);
             this.pnlFooter.Size = new System.Drawing.Size(340, 60);
@@ -437,7 +449,7 @@ namespace Reminder
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(340, 360);
+            this.ClientSize = new System.Drawing.Size(340, 400);
             this.Controls.Add(this.tableLayoutPanelMain);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -493,5 +505,6 @@ namespace Reminder
         private System.Windows.Forms.CheckBox ckBoxHide;
         private System.Windows.Forms.Panel pnlFooter;
         private System.Windows.Forms.Button btn_start;
+        private System.Windows.Forms.ComboBox cmbTheme;
     }
 }

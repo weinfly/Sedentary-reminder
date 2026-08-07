@@ -243,7 +243,7 @@ namespace Reminder
 
             ApplyRoundedCorners();
 
-            hideWorkForm = GetConfigValue("HideWorkForm", 0) == 1;
+            hideWorkForm = GetConfigValue("HideWorkForm", 1) == 1;
             if (hideWorkForm)
             {
                 this.Opacity = 0;
@@ -278,6 +278,18 @@ namespace Reminder
             ApplyRoundedCorners();
         }
 
+        private void OnThemeChanged(object sender, EventArgs e)
+        {
+            if (this.IsDisposed || this.Disposing) return;
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(new Action(ApplyTheme));
+                return;
+            }
+
+            ApplyTheme();
+        }
+
         /// <summary>
         /// 统一窗口初始化：高 DPI 缩放模式 + 圆角重算事件订阅
         /// </summary>
@@ -287,6 +299,10 @@ namespace Reminder
             this.AutoScaleDimensions = new SizeF(6F, 12F);
             this.Resize += WorkFrm_Resize;
             this.DpiChanged += WorkFrm_DpiChanged;
+
+            // 主题变化时重绘倒计时窗口
+            ThemeManager.ThemeChanged += OnThemeChanged;
+            this.Disposed += (s, e) => ThemeManager.ThemeChanged -= OnThemeChanged;
         }
 
         /// <summary>
@@ -367,6 +383,7 @@ namespace Reminder
 
                 if (wrk_minutes < 0)
                 {
+                    StatsTracker.RecordFocusSession(wrk_m);
                     timerWrk.Stop();
                     this.Close();
 

@@ -84,6 +84,10 @@
     <Compile Include="ThemeDialog.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="StatsTracker.cs" />
+    <Compile Include="StatsFrm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="MainFrm.cs">
       <SubType>Form</SubType>
     </Compile>

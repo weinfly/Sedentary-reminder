@@ -30,6 +30,8 @@ namespace Reminder
         public RestFrm(int rst_minutes, int wrk_minutes, bool input_flag, bool main_screen, Point location)
         {
             InitializeComponent();
+            ThemeManager.ThemeChanged += OnThemeChanged;
+            this.Disposed += (s, e) => ThemeManager.ThemeChanged -= OnThemeChanged;
             this.rst_m = rst_minutes;
             this.rst_s = 0;
             this.wrk_m = wrk_minutes;
@@ -108,6 +110,18 @@ namespace Reminder
             lblHint.Font = ThemeManager.Regular(11);
         }
 
+        private void OnThemeChanged(object sender, EventArgs e)
+        {
+            if (this.IsDisposed || this.Disposing) return;
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(new Action(ApplyTheme));
+                return;
+            }
+
+            ApplyTheme();
+        }
+
         private void InitializeTimer()
         {
             countdownTimer = new System.Windows.Forms.Timer
@@ -150,6 +164,7 @@ namespace Reminder
                     if (!messageShown)
                     {
                         messageShown = true;
+                        StatsTracker.RecordRestSession(rst_m);
                         ShowRestEndMessage();
                     }
                     else

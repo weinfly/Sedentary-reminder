@@ -11,7 +11,6 @@ namespace Reminder
         private System.Timers.Timer _timer;
         private DateTime _startTime;
         private DateTime _endTime;
-        private bool _shouldShowReminder;
 
         public ReminderService()
         {
@@ -76,8 +75,8 @@ namespace Reminder
                     if (now.DayOfWeek == DayOfWeek.Saturday || now.DayOfWeek == DayOfWeek.Sunday)
                         return;
 
-                    // 检查是否需要显示提醒（每分钟的第0秒触发，避免重复）
-                    if (now.Second == 0 && !_shouldShowReminder)
+                    // 每分钟的第0秒触发，避免重复提醒
+                    if (now.Second == 0)
                     {
                         // 通过事件日志记录提醒
                         EventLog.WriteEntry(ServiceName, $"Reminding user to take a break at {now:HH:mm:ss}", EventLogEntryType.Information);
