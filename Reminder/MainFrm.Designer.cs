@@ -55,6 +55,7 @@ namespace Reminder
             this.lblOptionsIcon = new System.Windows.Forms.Label();
             this.lblOptionsTitle = new System.Windows.Forms.Label();
             this.ckBoxInput = new System.Windows.Forms.CheckBox();
+            this.ckBoxHide = new System.Windows.Forms.CheckBox();
             this.pnlFooter = new System.Windows.Forms.Panel();
             this.btn_start = new System.Windows.Forms.Button();
             this.contextMenuStrip1.SuspendLayout();
@@ -121,7 +122,7 @@ namespace Reminder
             this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 65F));
             this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 60F));
-            this.tableLayoutPanelMain.Size = new System.Drawing.Size(340, 320);
+            this.tableLayoutPanelMain.Size = new System.Drawing.Size(340, 360);
             this.tableLayoutPanelMain.TabIndex = 0;
             // 
             // pnlHeader
@@ -164,7 +165,7 @@ namespace Reminder
             this.pnlBody.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(249)))), ((int)(((byte)(250)))));
             this.pnlBody.Name = "pnlBody";
             this.pnlBody.Padding = new System.Windows.Forms.Padding(15);
-            this.pnlBody.Size = new System.Drawing.Size(340, 180);
+            this.pnlBody.Size = new System.Drawing.Size(340, 235);
             this.pnlBody.TabIndex = 1;
             // 
             // tableLayoutPanelBody
@@ -179,7 +180,7 @@ namespace Reminder
             this.tableLayoutPanelBody.RowCount = 2;
             this.tableLayoutPanelBody.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanelBody.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanelBody.Size = new System.Drawing.Size(310, 150);
+            this.tableLayoutPanelBody.Size = new System.Drawing.Size(310, 205);
             this.tableLayoutPanelBody.TabIndex = 0;
             // 
             // pnlTimer
@@ -343,6 +344,7 @@ namespace Reminder
             this.pnlOptions.Controls.Add(this.lblOptionsIcon);
             this.pnlOptions.Controls.Add(this.lblOptionsTitle);
             this.pnlOptions.Controls.Add(this.ckBoxInput);
+            this.pnlOptions.Controls.Add(this.ckBoxHide);
             this.pnlOptions.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlOptions.Location = new System.Drawing.Point(3, 78);
             this.pnlOptions.Name = "pnlOptions";
@@ -387,6 +389,23 @@ namespace Reminder
             this.ckBoxInput.ThreeState = true;
             this.ckBoxInput.UseVisualStyleBackColor = true;
             // 
+            // ckBoxHide
+            // 
+            this.ckBoxHide.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.ckBoxHide.Appearance = System.Windows.Forms.Appearance.Button;
+            this.ckBoxHide.Checked = false;
+            this.ckBoxHide.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.ckBoxHide.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(117)))), ((int)(((byte)(117)))), ((byte)(117)));
+            this.ckBoxHide.Location = new System.Drawing.Point(8, 66);
+            this.ckBoxHide.Name = "ckBoxHide";
+            this.ckBoxHide.Size = new System.Drawing.Size(288, 30);
+            this.ckBoxHide.TabIndex = 3;
+            this.ckBoxHide.Text = "🙈 隐藏倒计时窗口（后台仍计时）";
+            this.ckBoxHide.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.ckBoxHide.UseVisualStyleBackColor = false;
+            this.ckBoxHide.CheckedChanged += new System.EventHandler(this.CkBoxHide_CheckedChanged);
+            // 
             // pnlFooter
             // 
             this.pnlFooter.Controls.Add(this.btn_start);
@@ -418,7 +437,7 @@ namespace Reminder
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(340, 320);
+            this.ClientSize = new System.Drawing.Size(340, 360);
             this.Controls.Add(this.tableLayoutPanelMain);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -471,6 +490,7 @@ namespace Reminder
         private System.Windows.Forms.Label lblOptionsIcon;
         private System.Windows.Forms.Label lblOptionsTitle;
         private System.Windows.Forms.CheckBox ckBoxInput;
+        private System.Windows.Forms.CheckBox ckBoxHide;
         private System.Windows.Forms.Panel pnlFooter;
         private System.Windows.Forms.Button btn_start;
     }

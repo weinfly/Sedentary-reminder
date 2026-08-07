@@ -22,7 +22,10 @@ namespace Reminder
         private System.Windows.Forms.Timer countdownTimer;
         private bool main_screen;
         private Point originalLocation;
-        private bool colonVisible = true; // 冒号闪烁状态
+
+        // 自定义进度条（替代原生 ProgressBar，颜色完全可控）
+        private Panel pnlTrack;
+        private Panel pnlFill;
 
         public RestFrm(int rst_minutes, int wrk_minutes, bool input_flag, bool main_screen, Point location)
         {
@@ -49,6 +52,8 @@ namespace Reminder
 
         private void SetupUI()
         {
+            ApplyTheme();
+
             // 根据是否锁定输入显示不同提示
             if (input_flag)
             {
@@ -62,9 +67,45 @@ namespace Reminder
 
             this.TopMost = true;
             this.WindowState = FormWindowState.Maximized;
-            this.Opacity = 0.85;
+
+            // 自定义进度条：隐藏原生 ProgressBar，使用可控颜色的 Panel
+            progressBar.Visible = false;
+            pnlTrack = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(70, 255, 255, 255)
+            };
+            pnlFill = new Panel
+            {
+                Dock = DockStyle.Left,
+                Width = pnlProgress.ClientSize.Width,
+                BackColor = Color.White
+            };
+            pnlTrack.Controls.Add(pnlFill);
+            pnlProgress.Controls.Add(pnlTrack);
 
             UpdateTimeLabels();
+        }
+
+        /// <summary>
+        /// 从 ThemeManager 统一取色与字体，覆盖 Designer 中的硬编码
+        /// </summary>
+        private void ApplyTheme()
+        {
+            this.BackColor = ThemeManager.Primary;
+            lblText.ForeColor = ThemeManager.OnPrimary;
+            lblText.Font = ThemeManager.Bold(16);
+            lblIcon.ForeColor = ThemeManager.OnPrimary;
+            lblTimerTitle.ForeColor = ThemeManager.OnPrimary;
+            lblTimerTitle.Font = ThemeManager.Regular(14);
+            lbl_minutes.Font = ThemeManager.Number(44);
+            lbl_minutes.ForeColor = ThemeManager.OnPrimary;
+            labelColon.Font = ThemeManager.Number(44);
+            labelColon.ForeColor = ThemeManager.OnPrimary;
+            lbl_seconds.Font = ThemeManager.Number(44);
+            lbl_seconds.ForeColor = ThemeManager.OnPrimary;
+            lblHint.ForeColor = ThemeManager.OnPrimary;
+            lblHint.Font = ThemeManager.Regular(11);
         }
 
         private void InitializeTimer()
@@ -81,14 +122,12 @@ namespace Reminder
             {
                 messageShown = false;
             }
+
+            FadeIn();
         }
 
         private void CountdownTimer_Tick(object sender, EventArgs e)
         {
-            // 闪烁冒号
-            colonVisible = !colonVisible;
-            labelColon.Visible = colonVisible;
-
             if (rst_s > 0 || rst_m > 0)
             {
                 if (rst_s == 0)
@@ -133,11 +172,12 @@ namespace Reminder
 
         private void UpdateProgress()
         {
-            if (total_seconds <= 0) return;
+            if (total_seconds <= 0 || pnlTrack == null) return;
             int remaining = rst_m * 60 + rst_s;
             int elapsed = total_seconds - remaining;
             int percent = (int)((double)elapsed / total_seconds * 100);
-            progressBar.Value = Math.Min(100, Math.Max(0, percent));
+            int w = (int)(pnlTrack.ClientSize.Width * Math.Min(100, Math.Max(0, percent)) / 100.0);
+            pnlFill.Width = w;
         }
 
         private void AnimateSecondsTick()
@@ -156,6 +196,23 @@ namespace Reminder
                 animTimer.Dispose();
             };
             animTimer.Start();
+        }
+
+        private void FadeIn()
+        {
+            this.Opacity = 0;
+            var fadeTimer = new System.Windows.Forms.Timer { Interval = 20 };
+            fadeTimer.Tick += (s, e) =>
+            {
+                this.Opacity += 0.04;
+                if (this.Opacity >= 0.92)
+                {
+                    this.Opacity = 0.92;
+                    fadeTimer.Stop();
+                    fadeTimer.Dispose();
+                }
+            };
+            fadeTimer.Start();
         }
 
         private void ShowRestEndMessage()
@@ -183,45 +240,9 @@ namespace Reminder
                     return;
                 }
 
-                // 创建自定义消息框 - 现代化样式
-                Form messageBoxForm = new Form
-                {
-                    Size = new Size(420, 220),
-                    FormBorderStyle = FormBorderStyle.FixedDialog,
-                    StartPosition = FormStartPosition.CenterScreen,
-                    Text = "休息结束",
-                    TopMost = true,
-                    ControlBox = false,
-                    BackColor = Color.FromArgb(76, 175, 80) // 绿色
-                };
-
-                // 创建计时器
-                System.Windows.Forms.Timer closeTimer = new System.Windows.Forms.Timer
-                {
-                    Interval = 15000
-                };
-
-                Label messageLabel = new Label
-                {
-                    Text = "✅ 站立时间结束！\n\n请坐下继续工作吧～\n（窗口将在 15 秒后自动关闭）\n\n点击此处立即关闭",
-                    Dock = DockStyle.Fill,
-                    TextAlign = ContentAlignment.MiddleCenter,
-                    Font = new Font("微软雅黑", 13F),
-                    ForeColor = Color.White,
-                    BackColor = Color.Transparent
-                };
-                messageLabel.Click += (s, args) =>
-                {
-                    closeTimer.Stop();
-                    messageBoxForm.Close();
-                };
-                messageLabel.Cursor = Cursors.Hand;
-
-                messageBoxForm.Controls.Add(messageLabel);
-                messageBoxForm.FormClosed += (s, args) => closeTimer.Dispose();
-
-                closeTimer.Start();
-                messageBoxForm.ShowDialog();
+                // 使用统一的样式化对话框
+                ThemeDialog.ShowInfo("休息结束",
+                    "✅ 站立时间结束！\n\n请坐下继续工作吧～\n（窗口将在 15 秒后自动关闭）\n\n点击此处立即关闭", 15);
 
                 // 显示工作窗口
                 int workTimeValue = GetConfigValue("WorkTimeValue", 45);

@@ -361,3 +361,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# WorkBuddy 本地记忆目录（非项目产物）
+.workbuddy/

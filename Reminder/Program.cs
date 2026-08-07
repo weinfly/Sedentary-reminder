@@ -167,6 +167,10 @@ namespace Reminder
 
             if (ShouldStartWorkForm(startHours))
             {
+                // 已有倒计时或休息窗口在运行时不重复创建，避免每分钟重建窗口抢占焦点
+                if (WorkFrm.IsRunning() || Application.OpenForms.Cast<Form>().Any(f => f is RestFrm))
+                    return;
+
                 CleanupExistingForms();
                 StartNewWorkForm(config);
             }
@@ -261,7 +265,6 @@ namespace Reminder
                     form = new WorkFrm(workTime, restTime);
                     form.TopMost = true;
                     form.Show();
-                    form.Activate();
                 }));
             }
             else

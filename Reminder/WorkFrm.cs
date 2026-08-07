@@ -1,7 +1,6 @@
 using System;
 using System.Configuration;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.IO;
 using System.Windows.Forms;
 
@@ -17,10 +16,13 @@ namespace Reminder
         private bool left_flag;//鼠标左键是否点击
         private Point mouseoff;
         private static bool isRunning = false;
+        private static WorkFrm currentInstance;
+        private bool hideWorkForm;//是否隐藏倒计时窗口
 
         public WorkFrm()
         {
             InitializeComponent();
+            SetupWindow();
         }
 
         /// <summary>
@@ -62,28 +64,23 @@ namespace Reminder
             try
             {
                 InitializeComponent();
+                SetupWindow();
 
                 // 获取当前时间
                 DateTime now = DateTime.Now;
 
                 // 根据配置文件的WorkTimeValue，计算下一个时间点
-                // 倒计时逻辑：基于"启动小时的整点 + 工作时长"来计算提醒时间
                 int workTimeValue = GetConfigValue("WorkTimeValue", 45);
                 int restTimeValue = GetConfigValue("RestTimeValue", 15);
 
-                // 计算当前小时的整点时间
                 DateTime hourStart = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0);
-
-                // 提醒时间 = 当前小时整点 + 工作时长
                 DateTime nextBreakTime = hourStart.AddMinutes(workTimeValue);
 
-                // 如果计算出的提醒时间已经过去了，则取下一个周期
                 if (nextBreakTime <= now)
                 {
                     nextBreakTime = now.AddMinutes(workTimeValue);
                 }
 
-                // 计算时间差
                 TimeSpan timeDiff = nextBreakTime - now;
                 double totalMilliseconds = timeDiff.TotalMilliseconds;
                 this.wrk_minutes = (int)(totalMilliseconds / 60000);
@@ -92,9 +89,9 @@ namespace Reminder
                 this.wrk_m = workTimeValue;
                 this.input_flag = false;
 
-                // 设置窗体位置
                 SetFormPosition();
                 isRunning = true;
+                currentInstance = this;
             }
             catch (Exception ex)
             {
@@ -111,14 +108,15 @@ namespace Reminder
             try
             {
                 InitializeComponent();
+                SetupWindow();
                 this.wrk_minutes = wrk_minutes;
                 this.rst_minutes = rst_minutes;
                 this.wrk_m = wrk_minutes;
                 this.input_flag = input_flag;
 
-                // 设置窗体位置
                 SetFormPosition();
                 isRunning = true;
+                currentInstance = this;
             }
             catch (Exception ex)
             {
@@ -132,11 +130,9 @@ namespace Reminder
         /// </summary>
         private void SetFormPosition()
         {
-            // 尝试加载用户保存的位置
             if (LoadSavedPosition())
                 return;
 
-            // 使用默认位置计算
             int screenIndex = GetConfigValue("WorkFormScreen", 0);
             Screen[] screens = Screen.AllScreens;
 
@@ -154,9 +150,6 @@ namespace Reminder
             this.Location = new Point(x, y);
         }
 
-        /// <summary>
-        /// 尝试加载用户上次拖动的窗口位置
-        /// </summary>
         private bool LoadSavedPosition()
         {
             try
@@ -171,7 +164,6 @@ namespace Reminder
 
                 if (int.TryParse(lines[0], out int x) && int.TryParse(lines[1], out int y))
                 {
-                    // 验证位置是否在任何屏幕范围内
                     foreach (Screen screen in Screen.AllScreens)
                     {
                         if (screen.WorkingArea.Contains(x, y))
@@ -189,9 +181,6 @@ namespace Reminder
             return false;
         }
 
-        /// <summary>
-        /// 保存当前窗口位置到文件
-        /// </summary>
         private void SavePosition()
         {
             try
@@ -220,40 +209,147 @@ namespace Reminder
             return isRunning;
         }
 
+        /// <summary>
+        /// 运行时动态切换倒计时窗口的隐藏状态（由设置界面调用）
+        /// </summary>
+        public void SetHidden(bool hidden)
+        {
+            hideWorkForm = hidden;
+            if (hidden)
+            {
+                this.Opacity = 0;
+            }
+            else
+            {
+                FadeIn();
+            }
+        }
+
+        /// <summary>
+        /// 当前运行的实例，供托盘状态等跨窗体读取；无运行实例则为 null
+        /// </summary>
+        public static WorkFrm Current => currentInstance;
+
+        /// <summary>
+        /// 剩余工作时间，供托盘状态显示
+        /// </summary>
+        public TimeSpan RemainingTime => new TimeSpan(0, wrk_minutes, wrk_seconds);
+
         private void Form1_Load(object sender, EventArgs e)
         {
-            // 初始化显示
+            ApplyTheme();
             lblSecond.Text = wrk_seconds.ToString("D2");
             lblMin.Text = wrk_minutes.ToString("D2");
 
-            // 设置圆角效果
-            this.Opacity = 0.95;
+            ApplyRoundedCorners();
+
+            hideWorkForm = GetConfigValue("HideWorkForm", 0) == 1;
+            if (hideWorkForm)
+            {
+                this.Opacity = 0;
+            }
+            else
+            {
+                FadeIn();
+            }
+        }
+
+        /// <summary>
+        /// 设置圆角效果（按当前尺寸从 ThemeManager 计算，Resize/DpiChanged 时重算）
+        /// </summary>
+        private void ApplyRoundedCorners()
+        {
+            this.Region = ThemeManager.CreateRoundedRegion(this.Width, this.Height, ThemeManager.CornerRadius);
+        }
+
+        /// <summary>
+        /// 尺寸变化（含 DPI 缩放）时重算圆角 Region，避免圆角错位
+        /// </summary>
+        private void WorkFrm_Resize(object sender, EventArgs e)
+        {
             ApplyRoundedCorners();
         }
 
         /// <summary>
-        /// 设置圆角效果
+        /// DPI 变化时重算圆角与布局
         /// </summary>
-        private void ApplyRoundedCorners()
+        private void WorkFrm_DpiChanged(object sender, DpiChangedEventArgs e)
         {
-            int radius = 12;
-            using (GraphicsPath path = new GraphicsPath())
+            ApplyRoundedCorners();
+        }
+
+        /// <summary>
+        /// 统一窗口初始化：高 DPI 缩放模式 + 圆角重算事件订阅
+        /// </summary>
+        private void SetupWindow()
+        {
+            this.AutoScaleMode = AutoScaleMode.Dpi;
+            this.AutoScaleDimensions = new SizeF(6F, 12F);
+            this.Resize += WorkFrm_Resize;
+            this.DpiChanged += WorkFrm_DpiChanged;
+        }
+
+        /// <summary>
+        /// 从 ThemeManager 统一取色与字体，覆盖 Designer 中的硬编码
+        /// </summary>
+        private void ApplyTheme()
+        {
+            this.BackColor = ThemeManager.Primary;
+
+            lblWarn.ForeColor = ThemeManager.OnPrimary;
+            lblWarn.Text = " ⏰ 注意坐姿 · 可拖动";
+
+            lblMin.Font = ThemeManager.Number(28);
+            lblMin.ForeColor = ThemeManager.OnPrimary;
+            labelColon.Font = ThemeManager.Number(28);
+            labelColon.ForeColor = ThemeManager.OnPrimary;
+            lblSecond.Font = ThemeManager.Number(28);
+            lblSecond.ForeColor = ThemeManager.OnPrimary;
+
+            lblProgress.ForeColor = ThemeManager.OnPrimary;
+
+            StyleActionButton(btnPause);
+            StyleActionButton(btnDelay);
+        }
+
+        /// <summary>
+        /// 统一操作按钮（暂停/推迟）的扁平风格与交互态
+        /// </summary>
+        private void StyleActionButton(Button btn)
+        {
+            btn.BackColor = ThemeManager.PrimaryDark;
+            btn.FlatStyle = FlatStyle.Flat;
+            btn.FlatAppearance.BorderColor = ThemeManager.OnPrimary;
+            btn.FlatAppearance.BorderSize = 1;
+            btn.ForeColor = ThemeManager.OnPrimary;
+            btn.FlatAppearance.MouseOverBackColor = ThemeManager.Primary;
+            btn.FlatAppearance.MouseDownBackColor = ThemeManager.PrimaryDark;
+        }
+
+        /// <summary>
+        /// 窗体淡入动画（从透明渐显至 0.95）
+        /// </summary>
+        private void FadeIn()
+        {
+            this.Opacity = 0;
+            var fadeTimer = new System.Windows.Forms.Timer { Interval = 20 };
+            fadeTimer.Tick += (s, ev) =>
             {
-                Rectangle rect = new Rectangle(0, 0, this.Width, this.Height);
-                path.AddArc(rect.X, rect.Y, radius * 2, radius * 2, 180, 90);
-                path.AddArc(rect.Right - radius * 2, rect.Y, radius * 2, radius * 2, 270, 90);
-                path.AddArc(rect.Right - radius * 2, rect.Bottom - radius * 2, radius * 2, radius * 2, 0, 90);
-                path.AddArc(rect.X, rect.Bottom - radius * 2, radius * 2, radius * 2, 90, 90);
-                path.CloseFigure();
-                this.Region = new Region(path);
-            }
+                this.Opacity += 0.05;
+                if (this.Opacity >= 0.95)
+                {
+                    this.Opacity = 0.95;
+                    fadeTimer.Stop();
+                    fadeTimer.Dispose();
+                }
+            };
+            fadeTimer.Start();
         }
 
         private void Timer1_Tick(object sender, EventArgs e)
         {
             try
             {
-                // 更新秒数
                 if (wrk_seconds > 0)
                 {
                     wrk_seconds--;
@@ -264,20 +360,16 @@ namespace Reminder
                     wrk_seconds = 59;
                 }
 
-                // 更新显示
                 lblSecond.Text = wrk_seconds.ToString("D2");
                 lblMin.Text = wrk_minutes.ToString("D2");
 
-                // 检查是否需要提醒
                 Warn();
 
-                // 检查是否结束
                 if (wrk_minutes < 0)
                 {
                     timerWrk.Stop();
                     this.Close();
 
-                    // 在多显示器上显示休息提醒
                     RestFrm[] restFrms = new RestFrm[Screen.AllScreens.Length];
                     for (int i = 0; i < Screen.AllScreens.Length; i++)
                     {
@@ -303,20 +395,32 @@ namespace Reminder
             {
                 btnDelay.Visible = false;
                 btnPause.Visible = false;
-                this.BackColor = Color.FromArgb(231, 76, 60); // 柔和红色
-                lblWarn.ForeColor = Color.White;
+                this.BackColor = ThemeManager.Warning;
+                lblWarn.ForeColor = ThemeManager.OnPrimary;
                 lblWarn.Text = "⚠️ 该起来了！";
                 lblProgress.Text = "即将锁定...";
-                lblProgress.ForeColor = Color.White;
-                lblMin.ForeColor = Color.White;
-                lblSecond.ForeColor = Color.White;
-                labelColon.ForeColor = Color.White;
+                lblProgress.ForeColor = ThemeManager.OnPrimary;
+                lblMin.ForeColor = ThemeManager.OnPrimary;
+                lblSecond.ForeColor = ThemeManager.OnPrimary;
+                labelColon.ForeColor = ThemeManager.OnPrimary;
 
-                // 居中显示
                 int x = (Screen.PrimaryScreen.WorkingArea.Size.Width) / 2 - this.Width / 2;
                 int y = (Screen.PrimaryScreen.WorkingArea.Size.Height) / 2 - this.Height / 2;
                 this.Location = new Point(x, y);
+
+                if (hideWorkForm && this.Opacity < 0.5)
+                {
+                    this.Opacity = 0.95;
+                }
             }
+        }
+
+        /// <summary>
+        /// 显示窗口时不抢占焦点
+        /// </summary>
+        protected override bool ShowWithoutActivation
+        {
+            get { return true; }
         }
 
         /// <summary>
@@ -383,7 +487,6 @@ namespace Reminder
         /// </summary>
         private void button1_Click(object sender, EventArgs e)
         {
-            // 创建新的倒计时窗口，从当前时间再增加10分钟
             WorkFrm workFrm = new WorkFrm(wrk_minutes + 10, rst_minutes, input_flag);
             workFrm.Show();
             this.Close();
@@ -417,12 +520,10 @@ namespace Reminder
 
         private void LblSecond_Click(object sender, EventArgs e)
         {
-            // 空实现，仅用于满足事件绑定
         }
 
         private void MainFrm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            // 空实现，仅用于满足事件绑定
         }
     }
 }

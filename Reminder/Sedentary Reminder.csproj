@@ -51,6 +51,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>ICO2.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -79,6 +80,10 @@
     </Compile>
     <Compile Include="KeyboardBlocker.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="ThemeManager.cs" />
+    <Compile Include="ThemeDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="MainFrm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -139,27 +144,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Alarm_clock_96px_1176926_easyicon.net.ico" />
-    <Content Include="appointment_reminder_stock_64px_43056_easyicon.net.ico" />
     <Content Include="ICO2.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="asset\sit_32.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="asset\sit_64.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="asset\sit_128.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="asset\sport_64_01.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="asset\sport_64_02.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="asset\sport_64_03.png" />
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="IWshRuntimeLibrary">
