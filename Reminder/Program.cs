@@ -88,6 +88,7 @@ namespace Reminder
             };
 
             Application.Run(mainForm);
+            Logger.Log("[DBG] Program: Application.Run returned, app is exiting");
         }
 
         private static void InitializeTimers(Configuration config)
@@ -349,8 +350,11 @@ namespace Reminder
                 {
                     try
                     {
+                    if (form.IsHandleCreated)
                         form.Invoke((Action)(() => form.Dispose()));
-                        Logger.Log($"时间：{DateTime.Now}，{form}窗口已关闭");
+                    else
+                        form.Dispose(); // 句柄尚未创建，可直接释放，避免后台线程 Invoke 抛“句柄未创建”异常
+                    Logger.Log($"时间：{DateTime.Now}，{form}窗口已关闭");
                         UpdateActiveFormReferences(form);
                     }
                     catch (Exception ex)

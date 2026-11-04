@@ -66,28 +66,14 @@ namespace Reminder
                 InitializeComponent();
                 SetupWindow();
 
-                // 获取当前时间
-                DateTime now = DateTime.Now;
-
-                // 根据配置文件的WorkTimeValue，计算下一个时间点
-                int workTimeValue = GetConfigValue("WorkTimeValue", 45);
-                int restTimeValue = GetConfigValue("RestTimeValue", 15);
-
-                DateTime hourStart = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0);
-                DateTime nextBreakTime = hourStart.AddMinutes(workTimeValue);
-
-                if (nextBreakTime <= now)
-                {
-                    nextBreakTime = now.AddMinutes(workTimeValue);
-                }
-
-                TimeSpan timeDiff = nextBreakTime - now;
-                double totalMilliseconds = timeDiff.TotalMilliseconds;
-                this.wrk_minutes = (int)(totalMilliseconds / 60000);
-                this.wrk_seconds = (int)((totalMilliseconds % 60000) / 1000);
-                this.rst_minutes = restTimeValue;
-                this.wrk_m = workTimeValue;
+                // 直接使用传入的工作时长（分钟），不再按整点重算，避免下一轮计时错乱
+                this.wrk_minutes = wrk_minutes;
+                this.wrk_seconds = 0;
+                this.rst_minutes = rst_minutes;
+                this.wrk_m = wrk_minutes;
                 this.input_flag = false;
+
+                Logger.Log($"[DBG] WorkFrm ctor(2arg) wrk={wrk_minutes} rst={rst_minutes} (按传入参数，不重算整点)");
 
                 SetFormPosition();
                 isRunning = true;
@@ -113,6 +99,9 @@ namespace Reminder
                 this.rst_minutes = rst_minutes;
                 this.wrk_m = wrk_minutes;
                 this.input_flag = input_flag;
+                this.wrk_seconds = 0; // 补齐初始化，避免依赖字段默认值
+
+                Logger.Log($"[DBG] WorkFrm ctor(3arg) wrk={wrk_minutes}:{wrk_seconds:D2} rst={rst_minutes} input_flag={input_flag}");
 
                 SetFormPosition();
                 isRunning = true;
@@ -202,6 +191,7 @@ namespace Reminder
         {
             base.OnClosed(e);
             isRunning = false;
+            Logger.Log($"[DBG] WorkFrm.OnClosed (wrk_m={wrk_m}, remaining={wrk_minutes}:{wrk_seconds:D2}) stack: {new System.Diagnostics.StackTrace(true)}");
         }
 
         public static bool IsRunning()
@@ -383,7 +373,7 @@ namespace Reminder
 
                 if (wrk_minutes < 0)
                 {
-                    StatsTracker.RecordFocusSession(wrk_m);
+                    Logger.Log($"[DBG] WorkFrm work countdown finished -> creating RestFrms on {Screen.AllScreens.Length} screen(s), rst={rst_minutes}, input_flag={input_flag}");
                     timerWrk.Stop();
                     this.Close();
 
@@ -504,6 +494,7 @@ namespace Reminder
         /// </summary>
         private void button1_Click(object sender, EventArgs e)
         {
+            Logger.Log($"[DBG] WorkFrm +10min clicked (wrk={wrk_minutes}:{wrk_seconds:D2})");
             WorkFrm workFrm = new WorkFrm(wrk_minutes + 10, rst_minutes, input_flag);
             workFrm.Show();
             this.Close();

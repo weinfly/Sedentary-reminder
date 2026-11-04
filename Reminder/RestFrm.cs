@@ -39,6 +39,7 @@ namespace Reminder
             this.input_flag = input_flag;
             this.main_screen = main_screen;
             this.originalLocation = location;
+            Logger.Log($"[DBG] RestFrm constructed rst={rst_minutes} wrk_m={wrk_minutes} input_flag={input_flag}");
             this.StartPosition = FormStartPosition.Manual;
             this.Location = location;
             // 绑定 FormClosing 事件处理程序
@@ -60,11 +61,15 @@ namespace Reminder
             if (input_flag)
             {
                 lblText.Text = $"⚠️ 久坐对身体不好！您已久坐{wrk_m}分钟了，\n键盘和鼠标被锁定，请站起来活动一下！";
+                lblTimerTitle.Text = "🔒 键盘已锁定 · 休息倒计时";
+                lblIcon.Text = "🏃";
                 KeyboardBlocker.off();
             }
             else
             {
                 lblText.Text = $"💪 久坐对身体不好！您已久坐{wrk_m}分钟了，\n站起来活动下吧，顺便喝口水！(Alt+F4 退出)";
+                lblTimerTitle.Text = "☕ 休息倒计时";
+                lblIcon.Text = "☕";
             }
 
             this.TopMost = true;
@@ -86,7 +91,11 @@ namespace Reminder
             pnlTrack.Controls.Add(pnlFill);
             pnlProgress.Controls.Add(pnlTrack);
 
+            // 窗口尺寸变化时重新居中并缩放倒计时
+            this.Resize += (s, e) => LayoutTimeDisplay();
+
             UpdateTimeLabels();
+            LayoutTimeDisplay();
         }
 
         /// <summary>
@@ -108,6 +117,42 @@ namespace Reminder
             lbl_seconds.ForeColor = ThemeManager.OnPrimary;
             lblHint.ForeColor = ThemeManager.OnPrimary;
             lblHint.Font = ThemeManager.Regular(11);
+
+            LayoutTimeDisplay();
+        }
+
+        /// <summary>
+        /// 居中并自适应缩放倒计时数字（MM : SS），避免弹跳、保证美观
+        /// </summary>
+        private void LayoutTimeDisplay()
+        {
+            if (pnlTimeDisplay == null) return;
+            int w = pnlTimeDisplay.ClientSize.Width;
+            int h = pnlTimeDisplay.ClientSize.Height;
+            if (w <= 0 || h <= 0) return;
+
+            // 字号随面板高度自适应（54~200pt），保持比例稳定，不随秒数变化跳动
+            float fs = Math.Max(54f, Math.Min(200f, h * 0.62f));
+            var font = ThemeManager.Number(fs);
+
+            lbl_minutes.Font = font;
+            labelColon.Font = font;
+            lbl_seconds.Font = font;
+
+            lbl_minutes.TextAlign = ContentAlignment.MiddleCenter;
+            labelColon.TextAlign = ContentAlignment.MiddleCenter;
+            lbl_seconds.TextAlign = ContentAlignment.MiddleCenter;
+
+            int lineH = (int)(fs * 1.25f);
+            int colonW = (int)(fs * 0.55f);
+            int numW = (int)(fs * 1.55f);
+            int totalW = numW + colonW + numW;
+            int x = Math.Max(0, (w - totalW) / 2);
+            int y = Math.Max(0, (h - lineH) / 2);
+
+            lbl_minutes.SetBounds(x, y, numW, lineH);
+            labelColon.SetBounds(x + numW, y, colonW, lineH);
+            lbl_seconds.SetBounds(x + numW + colonW, y, numW, lineH);
         }
 
         private void OnThemeChanged(object sender, EventArgs e)
@@ -155,24 +200,32 @@ namespace Reminder
                 }
                 UpdateTimeLabels();
                 UpdateProgress();
+                return;
+            }
+
+            // 倒计时归零：立即停表，避免重复触发与重入
+            if (countdownTimer != null && countdownTimer.Enabled)
+            {
+                countdownTimer.Stop();
+            }
+
+            bool shouldEnd;
+            lock (_lock)
+            {
+                shouldEnd = !messageShown;
+                if (shouldEnd) messageShown = true;
+            }
+
+            if (shouldEnd)
+            {
+                Logger.Log("[DBG] RestFrm countdown reached zero, ending rest session");
+                ShowRestEndMessage();
             }
             else
             {
-                // 检查消息框是否已经显示过
-                lock (_lock)
-                {
-                    if (!messageShown)
-                    {
-                        messageShown = true;
-                        StatsTracker.RecordRestSession(rst_m);
-                        ShowRestEndMessage();
-                    }
-                    else
-                    {
-                        countdownTimer.Stop();
-                        this.Close();
-                    }
-                }
+                // 其它实例（多显示器）已处理归零，本实例直接关闭
+                Logger.Log("[DBG] RestFrm countdown zero handled by another instance, closing self");
+                if (!this.IsDisposed) this.Close();
             }
         }
 
@@ -180,9 +233,7 @@ namespace Reminder
         {
             lbl_seconds.Text = rst_s.ToString("D2");
             lbl_minutes.Text = rst_m.ToString("D2");
-
-            // 秒数跳动动画：短暂放大
-            AnimateSecondsTick();
+            // 不再做“弹跳”缩放动画，避免数字跳动、提升可读性
         }
 
         private void UpdateProgress()
@@ -193,24 +244,6 @@ namespace Reminder
             int percent = (int)((double)elapsed / total_seconds * 100);
             int w = (int)(pnlTrack.ClientSize.Width * Math.Min(100, Math.Max(0, percent)) / 100.0);
             pnlFill.Width = w;
-        }
-
-        private void AnimateSecondsTick()
-        {
-            // 短暂放大字体再恢复，产生跳动效果
-            var originalFont = lbl_seconds.Font;
-            var biggerFont = new Font(originalFont.FontFamily, originalFont.Size * 1.08f, originalFont.Style);
-            lbl_seconds.Font = biggerFont;
-
-            var animTimer = new System.Windows.Forms.Timer { Interval = 200 };
-            animTimer.Tick += (s, args) =>
-            {
-                lbl_seconds.Font = originalFont;
-                biggerFont.Dispose();
-                animTimer.Stop();
-                animTimer.Dispose();
-            };
-            animTimer.Start();
         }
 
         private void FadeIn()
@@ -232,16 +265,22 @@ namespace Reminder
 
         private void ShowRestEndMessage()
         {
+            bool entered;
             lock (_lock)
             {
                 if (isMessageShowing)
+                {
+                    Logger.Log("[DBG] ShowRestEndMessage: isMessageShowing already true, early return");
                     return;
+                }
                 isMessageShowing = true;
+                entered = true;
             }
+            if (!entered) return;
 
             try
             {
-                // 获取配置的多个停止时间，默认值为12,18
+                // 自动停止时段：到点不再开启下一轮工作倒计时
                 var stopHours = GetConfigValue("AutoStopHours", "12,18")
                     .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                     .Select(int.Parse)
@@ -249,31 +288,31 @@ namespace Reminder
 
                 int currentHour = DateTime.Now.Hour;
 
-                // 检查当前时间是否等于任意一个停止时间
                 if (stopHours.Any(h => currentHour == h))
                 {
+                    Logger.Log($"[DBG] ShowRestEndMessage: stop hour ({currentHour}) reached, NOT creating new WorkFrm");
+                    CloseAllRestForms();
                     return;
                 }
 
-                // 使用统一的样式化对话框
+                // 关键修复：先启动下一轮工作倒计时并关闭所有休息窗，再显示“休息结束”提示。
+                // 这样即使提示窗口在模态期间被用户关闭/卡住，下一轮 WorkFrm 已经创建、
+                // 所有 RestFrm 已经关闭，循环不会中断（第一轮休息后卡死的根因）。
+                StartNextWorkForm();
+                CloseAllRestForms();
+
+                // 最后显示“休息结束”提示（此时所有 RestFrm 已关闭，即使用户在提示窗口按
+                // Alt+F4 也只关闭提示本身，不会触发 RestFrm_FormClosing 隐藏关键窗体）。
+                Logger.Log("[DBG] ShowRestEndMessage: showing rest-end dialog (modal)");
                 ThemeDialog.ShowInfo("休息结束",
                     "✅ 站立时间结束！\n\n请坐下继续工作吧～\n（窗口将在 15 秒后自动关闭）\n\n点击此处立即关闭", 15);
-
-                // 显示工作窗口
-                int workTimeValue = GetConfigValue("WorkTimeValue", 45);
-                int restTimeValue = GetConfigValue("RestTimeValue", 15);
-                WorkFrm workFrm = new WorkFrm(workTimeValue, restTimeValue);
-                workFrm.Show();
-
-                // 关闭所有 RestFrm 实例
-                var restForms = Application.OpenForms.Cast<Form>()
-                    .Where(f => f is RestFrm)
-                    .ToList();
-
-                foreach (var openForm in restForms)
-                {
-                    openForm.Dispose();
-                }
+            }
+            catch (Exception ex)
+            {
+                // 任何异常都不应中断循环：兜底再尝试启动下一轮并关闭休息窗
+                Logger.Log($"[ERR] ShowRestEndMessage 异常: {ex.Message}\n{ex.StackTrace}");
+                try { StartNextWorkForm(); } catch { }
+                try { CloseAllRestForms(); } catch { }
             }
             finally
             {
@@ -281,6 +320,56 @@ namespace Reminder
                 {
                     isMessageShowing = false;
                 }
+            }
+        }
+
+        /// <summary>
+        /// 启动下一轮工作倒计时（防御性 try-catch，失败仅记录，不影响关闭流程）
+        /// </summary>
+        private void StartNextWorkForm()
+        {
+            try
+            {
+                int workTimeValue = GetConfigValue("WorkTimeValue", 45);
+                int restTimeValue = GetConfigValue("RestTimeValue", 15);
+                bool lockInput = GetConfigValue("LockInput", 0) == 1;
+                WorkFrm workFrm = new WorkFrm(workTimeValue, restTimeValue, lockInput);
+                workFrm.Show();
+                Logger.Log($"[DBG] ShowRestEndMessage: next WorkFrm created (wrk={workTimeValue}, rst={restTimeValue}, lock={lockInput})");
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"[ERR] ShowRestEndMessage 创建下一轮 WorkFrm 失败: {ex.Message}\n{ex.StackTrace}");
+            }
+        }
+
+        /// <summary>
+        /// 关闭所有休息窗体：先关其它实例，再关自身（若自身仍存活），避免自销毁重入
+        /// </summary>
+        private void CloseAllRestForms()
+        {
+            try
+            {
+                var others = Application.OpenForms.Cast<Form>()
+                    .Where(f => f is RestFrm && f != this)
+                    .ToList();
+                foreach (var f in others)
+                {
+                    if (!f.IsDisposed) f.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"[ERR] 关闭其它 RestFrm 异常: {ex.Message}");
+            }
+
+            try
+            {
+                if (!this.IsDisposed && !this.Disposing) this.Close();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"[ERR] 关闭自身 RestFrm 异常: {ex.Message}");
             }
         }
 
@@ -298,15 +387,26 @@ namespace Reminder
 
         private void RestFrm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            Logger.Log($"[DBG] RestFrm_FormClosing reason={e.CloseReason} input_flag={input_flag}");
+
+            // 停止倒计时，避免窗体关闭后计时器仍在 Tick 已释放的控件
+            if (countdownTimer != null)
+            {
+                countdownTimer.Stop();
+                countdownTimer.Enabled = false;
+            }
+
             if (input_flag)
             {
                 KeyboardBlocker.on();
             }
 
-            // 检查是否是用户手动关闭休息遮罩窗体
-            if (e.CloseReason == CloseReason.UserClosing)
+            // 用户手动关闭（Alt+F4 / 点击）：
+            //  - 若正处于“休息结束→下一轮”流程中（isMessageShowing 为 true），不要隐藏，
+            //    直接关闭本实例，避免隐藏关键窗体打断循环（第一轮休息后卡死的根因）。
+            //  - 否则（休息进行中用户主动关闭）：隐藏并继续后台倒计时，保留原有便利行为。
+            if (e.CloseReason == CloseReason.UserClosing && !isMessageShowing)
             {
-                // 遍历所有打开的窗体，隐藏所有 RestFrm 实例
                 foreach (Form openForm in Application.OpenForms)
                 {
                     if (openForm is RestFrm && openForm != this)
@@ -317,17 +417,7 @@ namespace Reminder
                 e.Cancel = true;
                 this.Hide();
             }
-            else
-            {
-                // 同步关闭所有 RestFrm 实例
-                foreach (Form openForm in Application.OpenForms)
-                {
-                    if (openForm is RestFrm)
-                    {
-                        openForm.Close();
-                    }
-                }
-            }
+            // 其它情况（程序化关闭 / 结束流程中的用户关闭）：直接关闭本实例
         }
 
         private void lblText_Click(object sender, EventArgs e)

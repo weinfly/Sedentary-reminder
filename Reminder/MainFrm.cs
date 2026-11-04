@@ -15,6 +15,7 @@ namespace Reminder
         private ToolStripMenuItem autoStartMenuItem;
         private ToolStripMenuItem exitMenuItem;
         private ToolStripMenuItem aboutMenuItem;
+        private ToolStripMenuItem hideMenuItem;
         private Timer statusTimer;
 
         public MainFrm()
@@ -29,6 +30,12 @@ namespace Reminder
             mainFormMenuItem.Click += MainMenuItemClick;
             notifyIconContextMenu.Items.Add(mainFormMenuItem);
 
+            // 托盘右键直接切换“隐藏倒计时窗口”
+            hideMenuItem = new ToolStripMenuItem("隐藏倒计时窗口");
+            hideMenuItem.CheckOnClick = true;
+            hideMenuItem.Click += HideMenuItem_Click;
+            notifyIconContextMenu.Items.Add(hideMenuItem);
+
             autoStartMenuItem = new ToolStripMenuItem("开机启动");
             autoStartMenuItem.CheckOnClick = false;
             autoStartMenuItem.Click += AutoStartMenuItem_Click;
@@ -41,10 +48,6 @@ namespace Reminder
             exitMenuItem = new ToolStripMenuItem("退出");
             exitMenuItem.Click += 退出ToolStripMenuItem_Click;
             notifyIconContextMenu.Items.Add(exitMenuItem);
-
-            var statsMenuItem = new ToolStripMenuItem("📊 使用统计");
-            statsMenuItem.Click += StatsMenuItem_Click;
-            notifyIconContextMenu.Items.Add(statsMenuItem);
 
             // 锁定开关状态切换
             ckBoxInput.CheckedChanged += CkBoxInput_CheckedChanged;
@@ -70,6 +73,8 @@ namespace Reminder
             // 初始化“隐藏倒计时窗口”开关，并应用主题色
             ckBoxHide.Checked = GetConfigInt("HideWorkForm", 1) == 1;
             UpdateHideToggle();
+            // 同步托盘菜单项的勾选状态（CheckedChanged 仅在值变化时触发，需显式同步）
+            if (hideMenuItem != null) hideMenuItem.Checked = ckBoxHide.Checked;
 
             // 初始化主题选择控件
             cmbTheme.Items.AddRange(new object[] { "☀ 浅色", "🌙 深色", "🖥 跟随系统" });
@@ -121,6 +126,11 @@ namespace Reminder
             int wrkTime = (int)this.numWrkTime.Value;
             int rstTime = (int)this.numRstTime.Value;
 
+            // 持久化用户设置，供“休息结束→下一轮工作倒计时”复用（含键盘锁定偏好）
+            SetConfigValue("WorkTimeValue", wrkTime);
+            SetConfigValue("RestTimeValue", rstTime);
+            SetConfigValue("LockInput", ckBoxInput.Checked ? 1 : 0);
+
             if (WorkFrm.IsRunning())
             {
                 foreach (Form form in Application.OpenForms)
@@ -145,6 +155,11 @@ namespace Reminder
 
             int wrkTime = (int)this.numWrkTime.Value;
             int rstTime = (int)this.numRstTime.Value;
+
+            // 持久化用户设置，供“休息结束→下一轮工作倒计时”复用（含键盘锁定偏好）
+            SetConfigValue("WorkTimeValue", wrkTime);
+            SetConfigValue("RestTimeValue", rstTime);
+            SetConfigValue("LockInput", ckBoxInput.Checked ? 1 : 0);
 
             if (WorkFrm.IsRunning())
             {
@@ -192,6 +207,7 @@ namespace Reminder
 
         private void 退出ToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            Logger.Log("[DBG] MainFrm: user clicked Exit menu item");
             notifyIcon1.Visible = false;
             System.Environment.Exit(0);
         }
@@ -223,9 +239,28 @@ namespace Reminder
 
         private void CkBoxHide_CheckedChanged(object sender, EventArgs e)
         {
+            OnHideChanged(ckBoxHide.Checked);
+        }
+
+        private void HideMenuItem_Click(object sender, EventArgs e)
+        {
+            // CheckOnClick 已切换 hideMenuItem.Checked，直接使用新状态
+            OnHideChanged(hideMenuItem.Checked);
+        }
+
+        /// <summary>
+        /// 统一处理“隐藏倒计时窗口”开关：写配置、应用到运行中的 WorkFrm，
+        /// 并同步主窗口复选框与托盘菜单项的勾选状态（两者任一改动都会回到一致终态，无递归副作用）
+        /// </summary>
+        private void OnHideChanged(bool hide)
+        {
+            SetConfigValue("HideWorkForm", hide ? 1 : 0);
+            WorkFrm.Current?.SetHidden(hide);
+
+            if (ckBoxHide.Checked != hide) ckBoxHide.Checked = hide;          // 触发 CkBoxHide_CheckedChanged -> OnHideChanged（终态一致后无副作用）
+            if (hideMenuItem != null && hideMenuItem.Checked != hide) hideMenuItem.Checked = hide;
+
             UpdateHideToggle();
-            SetConfigValue("HideWorkForm", ckBoxHide.Checked ? 1 : 0);
-            WorkFrm.Current?.SetHidden(ckBoxHide.Checked);
         }
 
         private void UpdateHideToggle()
@@ -271,14 +306,6 @@ namespace Reminder
         {
             if (cmbTheme.SelectedIndex < 0) return;
             ThemeManager.Mode = (ThemeMode)cmbTheme.SelectedIndex;
-        }
-
-        private void StatsMenuItem_Click(object sender, EventArgs e)
-        {
-            using (var frm = new StatsFrm())
-            {
-                frm.ShowDialog(this);
-            }
         }
 
         private void ApplyTheme()
