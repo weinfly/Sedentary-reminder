@@ -142,7 +142,7 @@ namespace Reminder
                     }
                 }
             }
-            wrkFrm = new WorkFrm(wrkTime, rstTime);
+            wrkFrm = new WorkFrm(wrkTime, rstTime, ckBoxInput.Checked);
             wrkFrm.Show();
             this.Visible = false;
         }
@@ -189,11 +189,8 @@ namespace Reminder
 
         private void 主窗体ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            this.Opacity = 1;
-            this.ShowInTaskbar = true;
-            this.Visible = true;
-            this.WindowState = FormWindowState.Normal;
-            this.BringToFront();
+            // m9：与设计器绑定的点击处理直接委托给通用逻辑，消除重复实现
+            MainMenuItemClick(sender, e);
         }
 
         private void MainFrm_FormClosing(object sender, FormClosingEventArgs e)
@@ -208,6 +205,8 @@ namespace Reminder
         private void 退出ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Logger.Log("[DBG] MainFrm: user clicked Exit menu item");
+            // M4：退出前解除键盘/鼠标锁定，避免以管理员身份运行时锁输入残留导致系统无法操作
+            KeyboardBlocker.Unblock();
             notifyIcon1.Visible = false;
             System.Environment.Exit(0);
         }

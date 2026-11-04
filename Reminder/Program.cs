@@ -56,14 +56,9 @@ namespace Reminder
                 return;
             }
 
-            try
-            {
-                InitializeApplication();
-            }
-            finally
-            {
-                mutex.ReleaseMutex();
-            }
+            // 持有全局互斥量直到进程退出，确保真正的单实例；
+            // 进程退出时 OS 自动回收，无需手动 ReleaseMutex（原 finally 释放会导致非启动瞬间的多实例并存）
+            InitializeApplication();
         }
 
         private static void InitializeApplication()
@@ -192,13 +187,35 @@ namespace Reminder
 
         private static void CleanupExistingForms()
         {
-            foreach (Form form in Application.OpenForms)
+            // ToArray 快照，避免在后台线程枚举 OpenForms 时被 UI 线程修改导致异常
+            foreach (Form form in Application.OpenForms.Cast<Form>().ToArray())
             {
                 if (form is WorkFrm || form is RestFrm)
                 {
-                    form.Dispose();
+                    SafeDispose(form);
                     Logger.Log($"已关闭：{form}--{DateTime.Now}");
+                    UpdateActiveFormReferences(form);
                 }
+            }
+        }
+
+        /// <summary>
+        /// 在 UI 线程 dispose 窗体。System.Timers.Timer 的 Elapsed 回调运行于后台线程，
+        /// 不可直接 Dispose WinForms 控件（跨线程违规）。有句柄则 Invoke 到创建线程，否则直接释放。
+        /// </summary>
+        private static void SafeDispose(Form form)
+        {
+            if (form == null) return;
+            try
+            {
+                if (form.IsHandleCreated)
+                    form.Invoke((Action)(() => form.Dispose()));
+                else
+                    form.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"SafeDispose 失败: {ex.Message}");
             }
         }
 
@@ -211,7 +228,7 @@ namespace Reminder
                 var workTime = GetConfigValue(config, "WorkTimeValue", DEFAULT_WORK_TIME);
                 var restTime = GetConfigValue(config, "RestTimeValue", DEFAULT_REST_TIME);
 
-                if (TryCreateWorkForm(workTime, restTime, invokeForm))
+                if (TryCreateWorkForm(config, workTime, restTime, invokeForm))
                 {
                     Logger.Log("WorkFrm倒计时窗口启动成功");
                     SetupFormClosedHandlers();
@@ -227,7 +244,7 @@ namespace Reminder
             }
         }
 
-        private static bool TryCreateWorkForm(int workTime, int restTime, Form invokeForm = null)
+        private static bool TryCreateWorkForm(Configuration config, int workTime, int restTime, Form invokeForm = null)
         {
             int retryCount = 0;
             bool windowExists = false;
@@ -236,7 +253,7 @@ namespace Reminder
             {
                 lock (_lock)
                 {
-                    activeWorkFrm = CreateAndShowWorkForm(workTime, restTime, invokeForm);
+                    activeWorkFrm = CreateAndShowWorkForm(config, workTime, restTime, invokeForm);
                 }
 
                 Thread.Sleep(500);
@@ -253,31 +270,27 @@ namespace Reminder
             return windowExists;
         }
 
-        private static WorkFrm CreateAndShowWorkForm(int workTime, int restTime, Form invokeForm = null)
+        private static WorkFrm CreateAndShowWorkForm(Configuration config, int workTime, int restTime, Form invokeForm = null)
         {
             WorkFrm form = null;
-            // 优先使用传入的窗体进行Invoke，其次尝试Application.OpenForms
+            // 优先使用传入的窗体进行 Invoke，其次尝试主线程窗体（mainForm 常驻且有句柄）
             Form targetForm = invokeForm ?? (Application.OpenForms.Count > 0 ? Application.OpenForms[0] : null);
 
             if (targetForm != null && targetForm.IsHandleCreated)
             {
+                // 始终在已有 UI 线程创建 WorkFrm，避免双 STA 消息泵（两个 Application.Run 抢占主循环）
                 targetForm.Invoke((Action)(() =>
                 {
-                    form = new WorkFrm(workTime, restTime);
+                    bool lockInput = GetConfigValue(config, "LockInput", 0) == 1;
+                    form = new WorkFrm(workTime, restTime, lockInput);
                     form.TopMost = true;
                     form.Show();
                 }));
             }
             else
             {
-                var thread = new Thread(() =>
-                {
-                    form = new WorkFrm(workTime, restTime);
-                    form.TopMost = true;
-                    Application.Run(form);
-                });
-                thread.SetApartmentState(ApartmentState.STA);
-                thread.Start();
+                // 理论上 mainForm 常驻且句柄已创建，不会走到这里；记录以便排查（随后由 TryCreateWorkForm 重试）
+                Logger.Log("[WARN] CreateAndShowWorkForm: 无可用 UI 线程窗体句柄，跳过本轮创建");
             }
             return form;
         }
@@ -404,18 +417,6 @@ namespace Reminder
             else if (startHours.Contains(currentHour) && activeWorkFrm == null && activeRestFrm == null)
             {
                 CheckAndStartWorkFrm(config);
-            }
-
-            RestartTimerIfStopped(startTimer, "startTimer");
-            RestartTimerIfStopped(stopTimer, "stopTimer");
-        }
-
-        private static void RestartTimerIfStopped(System.Timers.Timer timer, string timerName)
-        {
-            if (!timer.Enabled)
-            {
-                Logger.Log($"重新启动{timerName}");
-                timer.Start();
             }
         }
     }

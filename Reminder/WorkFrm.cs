@@ -190,8 +190,13 @@ namespace Reminder
         protected override void OnClosed(EventArgs e)
         {
             base.OnClosed(e);
-            isRunning = false;
-            Logger.Log($"[DBG] WorkFrm.OnClosed (wrk_m={wrk_m}, remaining={wrk_minutes}:{wrk_seconds:D2}) stack: {new System.Diagnostics.StackTrace(true)}");
+            // 仅当本实例是当前运行实例时才清空，避免“先关后建”竞态下清空其它实例导致 isRunning 误判为 false
+            if (currentInstance == this)
+            {
+                currentInstance = null;
+            }
+            isRunning = (currentInstance != null);
+            Logger.Log($"[DBG] WorkFrm.OnClosed (wrk_m={wrk_m}, remaining={wrk_minutes}:{wrk_seconds:D2}) isRunning={isRunning} currentInstance={(currentInstance == null ? "null" : "set")}");
         }
 
         public static bool IsRunning()
@@ -204,6 +209,8 @@ namespace Reminder
         /// </summary>
         public void SetHidden(bool hidden)
         {
+            // 防御：窗体已释放/正在释放时不再访问控件，避免 ObjectDisposedException
+            if (this.IsDisposed || this.Disposing) return;
             hideWorkForm = hidden;
             if (hidden)
             {
@@ -356,6 +363,23 @@ namespace Reminder
         {
             try
             {
+                // m7：倒计时归零（00:00）即停表并创建休息窗，避免再闪 -1:59 一帧
+                if (wrk_minutes == 0 && wrk_seconds == 0)
+                {
+                    Logger.Log($"[DBG] WorkFrm work countdown finished -> creating RestFrms on {Screen.AllScreens.Length} screen(s), rst={rst_minutes}, input_flag={input_flag}");
+                    timerWrk.Stop();
+                    this.Close();
+
+                    RestFrm[] restFrms = new RestFrm[Screen.AllScreens.Length];
+                    for (int i = 0; i < Screen.AllScreens.Length; i++)
+                    {
+                        var screen = Screen.AllScreens[i];
+                        restFrms[i] = new RestFrm(rst_minutes, wrk_m, input_flag, screen.Primary, screen.Bounds.Location);
+                        restFrms[i].Show();
+                    }
+                    return;
+                }
+
                 if (wrk_seconds > 0)
                 {
                     wrk_seconds--;
@@ -370,21 +394,6 @@ namespace Reminder
                 lblMin.Text = wrk_minutes.ToString("D2");
 
                 Warn();
-
-                if (wrk_minutes < 0)
-                {
-                    Logger.Log($"[DBG] WorkFrm work countdown finished -> creating RestFrms on {Screen.AllScreens.Length} screen(s), rst={rst_minutes}, input_flag={input_flag}");
-                    timerWrk.Stop();
-                    this.Close();
-
-                    RestFrm[] restFrms = new RestFrm[Screen.AllScreens.Length];
-                    for (int i = 0; i < Screen.AllScreens.Length; i++)
-                    {
-                        var screen = Screen.AllScreens[i];
-                        restFrms[i] = new RestFrm(rst_minutes, wrk_m, input_flag, screen.Primary, screen.Bounds.Location);
-                        restFrms[i].Show();
-                    }
-                }
             }
             catch (Exception ex)
             {
@@ -520,9 +529,8 @@ namespace Reminder
         /// </summary>
         private void LogException(Exception ex, string context)
         {
-            string logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt");
-            string logMessage = $"[{DateTime.Now}] {context}: {ex.Message}\nStackTrace: {ex.StackTrace}\n\n";
-            File.AppendAllText(logPath, logMessage);
+            // M2：统一走 Logger.Log（带 _logLock），避免与后台线程并发写同一文件抛 IOException
+            Logger.Log($"[{context}] {ex.Message}\n{ex.StackTrace}");
             Console.WriteLine($"{context}: {ex.Message}");
         }
 

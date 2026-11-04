@@ -63,7 +63,7 @@ namespace Reminder
                 lblText.Text = $"⚠️ 久坐对身体不好！您已久坐{wrk_m}分钟了，\n键盘和鼠标被锁定，请站起来活动一下！";
                 lblTimerTitle.Text = "🔒 键盘已锁定 · 休息倒计时";
                 lblIcon.Text = "🏃";
-                KeyboardBlocker.off();
+                KeyboardBlocker.Block();
             }
             else
             {
@@ -283,7 +283,8 @@ namespace Reminder
                 // 自动停止时段：到点不再开启下一轮工作倒计时
                 var stopHours = GetConfigValue("AutoStopHours", "12,18")
                     .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(int.Parse)
+                    .Select(s => int.TryParse(s, out int v) ? v : -1)
+                    .Where(v => v >= 0)
                     .ToList();
 
                 int currentHour = DateTime.Now.Hour;
@@ -398,7 +399,7 @@ namespace Reminder
 
             if (input_flag)
             {
-                KeyboardBlocker.on();
+                KeyboardBlocker.Unblock();
             }
 
             // 用户手动关闭（Alt+F4 / 点击）：
