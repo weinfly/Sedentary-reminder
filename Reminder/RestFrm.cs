@@ -22,6 +22,8 @@ namespace Reminder
         private System.Windows.Forms.Timer countdownTimer;
         private bool main_screen;
         private Point originalLocation;
+        // 分辨率自适应缩放因子：以 1920x1080 为基准 1.0，按目标屏幕尺寸收敛
+        private float uiScale = 1f;
 
         // 自定义进度条（替代原生 ProgressBar，颜色完全可控）
         private Panel pnlTrack;
@@ -55,6 +57,12 @@ namespace Reminder
 
         private void SetupUI()
         {
+            // —— 分辨率自适应：先按目标屏幕计算统一缩放因子，再套用到所有字体与固定像素度量 ——
+            // 这样在任何分辨率/DPI 下，文字、图标、倒计时、进度条保持一致的相对比例。
+            Rectangle targetBounds = GetTargetScreenBounds();
+            uiScale = Math.Max(0.7f, Math.Min(2.4f,
+                Math.Min(targetBounds.Width / 1920f, targetBounds.Height / 1080f)));
+
             ApplyTheme();
 
             // 根据是否锁定输入显示不同提示
@@ -76,7 +84,10 @@ namespace Reminder
             }
 
             this.TopMost = true;
-            this.WindowState = FormWindowState.Maximized;
+            // 精确覆盖目标屏幕：不再用 WindowState=Maximized（多显示器/不同分辨率下
+            // 最大化可能落到主屏或与其它屏遮罩重叠），改为显式设置到该屏幕的完整边界。
+            this.WindowState = FormWindowState.Normal;
+            this.Bounds = targetBounds;
 
             // 自定义进度条：隐藏原生 ProgressBar，使用可控颜色的 Panel
             progressBar.Visible = false;
@@ -108,18 +119,26 @@ namespace Reminder
         {
             this.BackColor = ThemeManager.Primary;
             lblText.ForeColor = ThemeManager.OnPrimary;
-            lblText.Font = ThemeManager.Bold(16);
+            // 全部按 uiScale 同比缩放，避免“文字固定、倒计时暴涨”的比例失衡
+            lblText.Font = ThemeManager.Bold(20f * uiScale);
             lblIcon.ForeColor = ThemeManager.OnPrimary;
+            lblIcon.Font = ThemeManager.Regular(90f * uiScale);
             lblTimerTitle.ForeColor = ThemeManager.OnPrimary;
-            lblTimerTitle.Font = ThemeManager.Regular(14);
-            lbl_minutes.Font = ThemeManager.Number(44);
-            lbl_minutes.ForeColor = ThemeManager.OnPrimary;
-            labelColon.Font = ThemeManager.Number(44);
-            labelColon.ForeColor = ThemeManager.OnPrimary;
-            lbl_seconds.Font = ThemeManager.Number(44);
-            lbl_seconds.ForeColor = ThemeManager.OnPrimary;
+            lblTimerTitle.Font = ThemeManager.Regular(16f * uiScale);
             lblHint.ForeColor = ThemeManager.OnPrimary;
-            lblHint.Font = ThemeManager.Regular(11);
+            lblHint.Font = ThemeManager.Regular(13f * uiScale);
+
+            // 进度条行高与内边距随分辨率缩放：4K 下不再细如发丝，小屏也不再过粗
+            if (tableLayoutPanelMain != null && tableLayoutPanelMain.RowStyles.Count > 2)
+            {
+                tableLayoutPanelMain.RowStyles[2].Height = Math.Max(18f, 30f * uiScale);
+            }
+            if (pnlProgress != null)
+            {
+                int padX = Math.Max(20, (int)(80f * uiScale));
+                int padY = Math.Max(4, (int)(8f * uiScale));
+                pnlProgress.Padding = new Padding(padX, padY, padX, padY);
+            }
 
             LayoutTimeDisplay();
         }
@@ -134,8 +153,16 @@ namespace Reminder
             int h = pnlTimeDisplay.ClientSize.Height;
             if (w <= 0 || h <= 0) return;
 
-            // 字号随面板高度自适应（54~200pt），保持比例稳定，不随秒数变化跳动
-            float fs = Math.Max(54f, Math.Min(200f, h * 0.62f));
+            // 字号随面板高度自适应，但必须同时受“宽度”和“分辨率”双重约束：
+            //  - 宽度：两位数字(各约 1.85fs) + 冒号(约 0.6fs) ≈ 4.3fs，留 5% 边距，
+            //    否则高分辨率下“02:45”的首末位会被裁切（只看到“2”“4”的原因）。
+            //  - 分辨率：上限随 uiScale 收敛，避免数字相对其它文字过分膨胀。
+            float fs = Math.Min(200f, h * 0.62f);
+            float maxFsByWidth = w * 0.95f / 4.3f;
+            fs = Math.Min(fs, maxFsByWidth);
+            fs = Math.Min(fs, 170f * uiScale);
+            fs = Math.Max(24f, fs);
+
             var font = ThemeManager.Number(fs);
 
             lbl_minutes.Font = font;
@@ -146,16 +173,37 @@ namespace Reminder
             labelColon.TextAlign = ContentAlignment.MiddleCenter;
             lbl_seconds.TextAlign = ContentAlignment.MiddleCenter;
 
-            int lineH = (int)(fs * 1.25f);
-            int colonW = (int)(fs * 0.55f);
-            int numW = (int)(fs * 1.55f);
-            int totalW = numW + colonW + numW;
+            int lineH = Math.Min((int)(fs * 1.3f), h);
+            int colonW = (int)(fs * 0.6f);
+            int numW = (int)(fs * 1.85f);
+            int totalW = numW * 2 + colonW;
             int x = Math.Max(0, (w - totalW) / 2);
             int y = Math.Max(0, (h - lineH) / 2);
 
             lbl_minutes.SetBounds(x, y, numW, lineH);
             labelColon.SetBounds(x + numW, y, colonW, lineH);
             lbl_seconds.SetBounds(x + numW + colonW, y, numW, lineH);
+        }
+
+        /// <summary>
+        /// 解析本窗体应覆盖的屏幕：优先用构造时传入的左上角点定位屏幕，失败回退主屏。
+        /// 用于多显示器 / 不同分辨率场景，保证每块屏一个遮罩且尺寸与该屏精确一致。
+        /// </summary>
+        private Rectangle GetTargetScreenBounds()
+        {
+            try
+            {
+                Screen screen = Screen.FromPoint(originalLocation);
+                if (screen != null)
+                {
+                    return screen.Bounds;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"[WARN] RestFrm.GetTargetScreenBounds 失败，回退主屏: {ex.Message}");
+            }
+            return Screen.PrimaryScreen != null ? Screen.PrimaryScreen.Bounds : this.Bounds;
         }
 
         private void OnThemeChanged(object sender, EventArgs e)
