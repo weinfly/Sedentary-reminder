@@ -24,6 +24,12 @@ namespace Reminder
         private Point originalLocation;
         // 分辨率自适应缩放因子：以 1920x1080 为基准 1.0，按目标屏幕尺寸收敛
         private float uiScale = 1f;
+        private const float BaselineWidth = 1920f;
+        private const float BaselineHeight = 1080f;
+        private const string CnFontName = "微软雅黑";
+
+        // 自绘倒计时：像素字号 + 实测自适应（见文件末尾 TimeDisplay）
+        private TimeDisplay timeDisplay;
 
         // 自定义进度条（替代原生 ProgressBar，颜色完全可控）
         private Panel pnlTrack;
@@ -57,13 +63,20 @@ namespace Reminder
 
         private void SetupUI()
         {
-            // —— 分辨率自适应：先按目标屏幕计算统一缩放因子，再套用到所有字体与固定像素度量 ——
-            // 这样在任何分辨率/DPI 下，文字、图标、倒计时、进度条保持一致的相对比例。
+            // —— 分辨率自适应 ——
+            // 统一缩放因子以 1920x1080（屏幕像素）为基准，收敛到 0.7~2.4。
+            // 关键修正：UI 尺寸与字体一律用「像素」表达（见 PxFont / TimeDisplay），
+            // 不再把 pt 当 px 用——这是上一版数字被裁成「2」「5」、冒号消失的根因。
             Rectangle targetBounds = GetTargetScreenBounds();
             uiScale = Math.Max(0.7f, Math.Min(2.4f,
-                Math.Min(targetBounds.Width / 1920f, targetBounds.Height / 1080f)));
+                Math.Min(targetBounds.Width / BaselineWidth, targetBounds.Height / BaselineHeight)));
 
             ApplyTheme();
+
+            // 先把中间区域改成「单列居中」，再应用字体：
+            // 原设计为图标/倒计时各占左右 50%，在非 16:9 或异分辨率屏上必然整体偏左。
+            RestructureCenterLayout();
+            CreateTimeDisplay();
 
             // 根据是否锁定输入显示不同提示
             if (input_flag)
@@ -99,17 +112,14 @@ namespace Reminder
             pnlFill = new Panel
             {
                 Dock = DockStyle.Left,
-                Width = pnlProgress.ClientSize.Width,
+                Width = 0,
                 BackColor = Color.White
             };
             pnlTrack.Controls.Add(pnlFill);
             pnlProgress.Controls.Add(pnlTrack);
 
-            // 窗口尺寸变化时重新居中并缩放倒计时
-            this.Resize += (s, e) => LayoutTimeDisplay();
-
             UpdateTimeLabels();
-            LayoutTimeDisplay();
+            UpdateProgress();
         }
 
         /// <summary>
@@ -119,19 +129,20 @@ namespace Reminder
         {
             this.BackColor = ThemeManager.Primary;
             lblText.ForeColor = ThemeManager.OnPrimary;
-            // 全部按 uiScale 同比缩放，避免“文字固定、倒计时暴涨”的比例失衡
-            lblText.Font = ThemeManager.Bold(20f * uiScale);
             lblIcon.ForeColor = ThemeManager.OnPrimary;
-            lblIcon.Font = ThemeManager.Regular(90f * uiScale);
             lblTimerTitle.ForeColor = ThemeManager.OnPrimary;
-            lblTimerTitle.Font = ThemeManager.Regular(16f * uiScale);
             lblHint.ForeColor = ThemeManager.OnPrimary;
-            lblHint.Font = ThemeManager.Regular(13f * uiScale);
+
+            // 全部使用「像素」字号并按 uiScale 放大：与像素布局一致，杜绝 pt/px 混算
+            lblText.Font = PxFont(CnFontName, 30f, FontStyle.Bold);
+            lblIcon.Font = PxFont(CnFontName, 120f, FontStyle.Regular);
+            lblTimerTitle.Font = PxFont(CnFontName, 26f, FontStyle.Regular);
+            lblHint.Font = PxFont(CnFontName, 20f, FontStyle.Regular);
 
             // 进度条行高与内边距随分辨率缩放：4K 下不再细如发丝，小屏也不再过粗
             if (tableLayoutPanelMain != null && tableLayoutPanelMain.RowStyles.Count > 2)
             {
-                tableLayoutPanelMain.RowStyles[2].Height = Math.Max(18f, 30f * uiScale);
+                tableLayoutPanelMain.RowStyles[2].Height = Math.Max(18f, 26f * uiScale);
             }
             if (pnlProgress != null)
             {
@@ -140,49 +151,96 @@ namespace Reminder
                 pnlProgress.Padding = new Padding(padX, padY, padX, padY);
             }
 
-            LayoutTimeDisplay();
+            if (timeDisplay != null)
+            {
+                timeDisplay.BackColor = ThemeManager.Primary;
+                timeDisplay.ForeColor = ThemeManager.OnPrimary;
+                timeDisplay.MaxFontPx = 200f * uiScale;
+            }
         }
 
         /// <summary>
-        /// 居中并自适应缩放倒计时数字（MM : SS），避免弹跳、保证美观
+        /// 按「像素」创建字体（96 DPI 基准像素 × 统一缩放因子）。
+        /// 用 GraphicsUnit.Pixel 而非 Point，保证字体实际像素高度与布局计算一致。
         /// </summary>
-        private void LayoutTimeDisplay()
+        private Font PxFont(string family, float pixelAt96, FontStyle style)
         {
-            if (pnlTimeDisplay == null) return;
-            int w = pnlTimeDisplay.ClientSize.Width;
-            int h = pnlTimeDisplay.ClientSize.Height;
-            if (w <= 0 || h <= 0) return;
+            float px = Math.Max(8f, pixelAt96 * uiScale);
+            return new Font(family, px, style, GraphicsUnit.Pixel);
+        }
 
-            // 字号随面板高度自适应，但必须同时受“宽度”和“分辨率”双重约束：
-            //  - 宽度：两位数字(各约 1.85fs) + 冒号(约 0.6fs) ≈ 4.3fs，留 5% 边距，
-            //    否则高分辨率下“02:45”的首末位会被裁切（只看到“2”“4”的原因）。
-            //  - 分辨率：上限随 uiScale 收敛，避免数字相对其它文字过分膨胀。
-            float fs = Math.Min(200f, h * 0.62f);
-            float maxFsByWidth = w * 0.95f / 4.3f;
-            fs = Math.Min(fs, maxFsByWidth);
-            fs = Math.Min(fs, 170f * uiScale);
-            fs = Math.Max(24f, fs);
+        /// <summary>
+        /// 把中间区域重构为「单列居中」：图标在上（34%）、标题+倒计时在下（66%），
+        /// 全部相对整屏居中。原设计为图标/倒计时各占左右 50%，
+        /// 在超宽屏或非 16:9 分辨率下会整体偏左、构图失衡。
+        /// </summary>
+        private void RestructureCenterLayout()
+        {
+            try
+            {
+                tableLayoutPanelCenter.SuspendLayout();
 
-            var font = ThemeManager.Number(fs);
+                // 先摘除子控件，避免缩小列数时仍有控件停留在被移除的列上
+                tableLayoutPanelCenter.Controls.Clear();
 
-            lbl_minutes.Font = font;
-            labelColon.Font = font;
-            lbl_seconds.Font = font;
+                // 收敛为 1 列（ColumnCount 变小时会自动裁剪多余的列样式）
+                tableLayoutPanelCenter.ColumnCount = 1;
+                if (tableLayoutPanelCenter.ColumnStyles.Count > 0)
+                {
+                    tableLayoutPanelCenter.ColumnStyles[0].SizeType = SizeType.Percent;
+                    tableLayoutPanelCenter.ColumnStyles[0].Width = 100F;
+                }
 
-            lbl_minutes.TextAlign = ContentAlignment.MiddleCenter;
-            labelColon.TextAlign = ContentAlignment.MiddleCenter;
-            lbl_seconds.TextAlign = ContentAlignment.MiddleCenter;
+                // 两行：图标 34%，标题 + 倒计时 66%
+                tableLayoutPanelCenter.RowCount = 2;
+                if (tableLayoutPanelCenter.RowStyles.Count > 0)
+                {
+                    tableLayoutPanelCenter.RowStyles[0].SizeType = SizeType.Percent;
+                    tableLayoutPanelCenter.RowStyles[0].Height = 34F;
+                }
+                if (tableLayoutPanelCenter.RowStyles.Count > 1)
+                {
+                    tableLayoutPanelCenter.RowStyles[1].SizeType = SizeType.Percent;
+                    tableLayoutPanelCenter.RowStyles[1].Height = 66F;
+                }
 
-            int lineH = Math.Min((int)(fs * 1.3f), h);
-            int colonW = (int)(fs * 0.6f);
-            int numW = (int)(fs * 1.85f);
-            int totalW = numW * 2 + colonW;
-            int x = Math.Max(0, (w - totalW) / 2);
-            int y = Math.Max(0, (h - lineH) / 2);
+                tableLayoutPanelCenter.Controls.Add(pnlIcon, 0, 0);
+                tableLayoutPanelCenter.Controls.Add(pnlTimer, 0, 1);
 
-            lbl_minutes.SetBounds(x, y, numW, lineH);
-            labelColon.SetBounds(x + numW, y, colonW, lineH);
-            lbl_seconds.SetBounds(x + numW + colonW, y, numW, lineH);
+                lblIcon.TextAlign = ContentAlignment.MiddleCenter;
+                lblTimerTitle.TextAlign = ContentAlignment.MiddleCenter;
+
+                tableLayoutPanelCenter.ResumeLayout(true);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"[WARN] RestructureCenterLayout 失败，保持原布局: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 用单个自绘面板替代「时/冒号/秒」三个 Label。
+        /// 旧实现字号为 pt、容器为 px，在非 96 DPI 下必然“字大字框小”导致数字被裁、
+        /// 冒号被挤没；自绘面板按容器实测宽高自动选最大像素字号，整串绘制，永不裁切。
+        /// </summary>
+        private void CreateTimeDisplay()
+        {
+            if (timeDisplay != null) return;
+
+            lbl_minutes.Visible = false;
+            labelColon.Visible = false;
+            lbl_seconds.Visible = false;
+
+            timeDisplay = new TimeDisplay
+            {
+                Dock = DockStyle.Fill,
+                BackColor = ThemeManager.Primary,
+                ForeColor = ThemeManager.OnPrimary,
+                MaxFontPx = 200f * uiScale
+            };
+            pnlTimeDisplay.Controls.Add(timeDisplay);
+            timeDisplay.BringToFront();
+            pnlTimeDisplay.ResumeLayout(true);
         }
 
         /// <summary>
@@ -282,9 +340,14 @@ namespace Reminder
 
         private void UpdateTimeLabels()
         {
+            if (timeDisplay != null)
+            {
+                timeDisplay.SetTime(rst_m, rst_s);
+                return;
+            }
+            // 兜底（timeDisplay 尚未创建时）
             lbl_seconds.Text = rst_s.ToString("D2");
             lbl_minutes.Text = rst_m.ToString("D2");
-            // 不再做“弹跳”缩放动画，避免数字跳动、提升可读性
         }
 
         private void UpdateProgress()
@@ -485,6 +548,90 @@ namespace Reminder
         private void lblText_Click(object sender, EventArgs e)
         {
             // 空实现，用于事件绑定
+        }
+
+        /// <summary>
+        /// 自绘倒计时：以像素为单位，按容器实测宽高自动选择最大字号，整串绘制 "MM:SS"。
+        /// 相比三个 Label + pt 字号的做法，可彻底避免高 DPI 下数字裁切、冒号丢失、
+        /// 以及随秒数变化产生的宽度跳动。
+        /// </summary>
+        private sealed class TimeDisplay : Panel
+        {
+            private const string NumFontName = "Segoe UI Semibold";
+
+            private int _minutes;
+            private int _seconds;
+            private float _maxFontPx = 200f;
+
+            public TimeDisplay()
+            {
+                SetStyle(ControlStyles.AllPaintingInWmPaint
+                       | ControlStyles.OptimizedDoubleBuffer
+                       | ControlStyles.UserPaint
+                       | ControlStyles.ResizeRedraw, true);
+                TabStop = false;
+            }
+
+            /// <summary>字号上限（像素），由外部按屏幕缩放因子给出，防止大屏上过度膨胀</summary>
+            public float MaxFontPx
+            {
+                get { return _maxFontPx; }
+                set
+                {
+                    _maxFontPx = Math.Max(12f, value);
+                    Invalidate();
+                }
+            }
+
+            public void SetTime(int minutes, int seconds)
+            {
+                if (_minutes == minutes && _seconds == seconds) return;
+                _minutes = minutes;
+                _seconds = seconds;
+                Invalidate();
+            }
+
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                base.OnPaint(e);
+                int w = ClientSize.Width;
+                int h = ClientSize.Height;
+                if (w <= 2 || h <= 2) return;
+
+                string text = _minutes.ToString("D2") + ":" + _seconds.ToString("D2");
+                float fontPx = FitFontPx(e.Graphics, text, w, h);
+
+                using (var font = new Font(NumFontName, fontPx, FontStyle.Bold, GraphicsUnit.Pixel))
+                {
+                    var rect = new Rectangle(0, 0, w, h);
+                    TextRenderer.DrawText(e.Graphics, text, font, rect, ForeColor,
+                        TextFormatFlags.HorizontalCenter
+                        | TextFormatFlags.VerticalCenter
+                        | TextFormatFlags.NoPadding);
+                }
+            }
+
+            /// <summary>二分查找「宽、高都不超出容器」的最大像素字号</summary>
+            private float FitFontPx(Graphics g, string text, int w, int h)
+            {
+                float maxW = w * 0.94f;
+                float maxH = h * 0.92f;
+                float lo = 12f;
+                float hi = Math.Max(16f, Math.Min(_maxFontPx, maxH * 1.6f));
+
+                for (int i = 0; i < 18; i++)
+                {
+                    float mid = (lo + hi) / 2f;
+                    using (var f = new Font(NumFontName, mid, FontStyle.Bold, GraphicsUnit.Pixel))
+                    {
+                        Size sz = TextRenderer.MeasureText(g, text, f,
+                            new Size(int.MaxValue, int.MaxValue), TextFormatFlags.NoPadding);
+                        bool fits = sz.Width <= maxW && sz.Height <= maxH;
+                        if (fits) lo = mid; else hi = mid;
+                    }
+                }
+                return Math.Max(12f, lo);
+            }
         }
     }
 }
