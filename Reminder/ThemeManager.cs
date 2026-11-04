@@ -200,7 +200,8 @@ namespace Reminder
         {
             try
             {
-                var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                // M-2：PerUserRoaming 写入用户 AppData，避免 Program Files 下只读导致主题偏好丢失
+                var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoaming);
                 string v = mode.ToString();
                 if (config.AppSettings.Settings["ThemeMode"] != null)
                 {
@@ -214,9 +215,10 @@ namespace Reminder
                 config.Save(ConfigurationSaveMode.Modified);
                 ConfigurationManager.RefreshSection("appSettings");
             }
-            catch
+            catch (Exception ex)
             {
-                // 无写入权限时静默忽略
+                // 无写入权限时记录日志（不再静默吞掉）
+                Logger.Log($"[WARN] 主题模式持久化失败: {ex.Message}");
             }
         }
 

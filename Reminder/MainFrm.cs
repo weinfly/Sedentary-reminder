@@ -391,7 +391,7 @@ namespace Reminder
                 }
                 else if (shortcurPaths.Count == 0)
                 {
-                    bool res = CreateShortcut(systemStartPath, QuickName, appAllPath, "Sedentary Reminder");
+                    CreateShortcut(systemStartPath, QuickName, appAllPath, "Sedentary Reminder");
                 }
             }
             else
@@ -448,11 +448,10 @@ namespace Reminder
         private List<string> GetQuickFromFolder(string systemStartPath, string appAllPath)
         {
             List<string> tmpStrs = new List<string>();
-            String tmpStr = null;
             String[] files = Directory.GetFiles(systemStartPath, "*.lnk");
             for (int i = 0; i < files.Length; i++)
             {
-                tmpStr = GetAppPathFromQuick(files[i]);
+                string tmpStr = GetAppPathFromQuick(files[i]);
                 if (tmpStr == appAllPath)
                 {
                     tmpStrs.Add(files[i]);
@@ -496,13 +495,16 @@ namespace Reminder
         }
 
         /// <summary>
-        /// 写入并持久化 appSettings 配置；无写入权限时静默忽略
+        /// 写入并持久化 appSettings 配置。
+        /// M-2：改用 ConfigurationUserLevel.PerUserRoaming，写入用户 AppData 下的 user.config
+        /// （可写），避免在 C:\Program Files 等只读程序目录下保存被拒导致“设置改完即丢”。
+        /// 保存失败改为记录日志（不再静默吞掉），便于排查。
         /// </summary>
         private void SetConfigValue(string key, int value)
         {
             try
             {
-                var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoaming);
                 if (config.AppSettings.Settings[key] != null)
                 {
                     config.AppSettings.Settings[key].Value = value.ToString();
@@ -516,7 +518,7 @@ namespace Reminder
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"保存配置 {key} 失败: {ex.Message}");
+                Logger.Log($"[WARN] 保存配置 {key} 失败（可能因无写入权限）: {ex.Message}");
             }
         }
     }

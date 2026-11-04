@@ -18,6 +18,7 @@ namespace Reminder
         private static bool isRunning = false;
         private static WorkFrm currentInstance;
         private bool hideWorkForm;//是否隐藏倒计时窗口
+        private bool _warnedOnce = false;//m-5：提醒态是否已将窗体居中过，避免每帧拉回主屏中心
 
         public WorkFrm()
         {
@@ -54,36 +55,6 @@ namespace Reminder
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// 无参数构造函数 - 从配置文件读取并自动计算倒计时
-        /// </summary>
-        public WorkFrm(int wrk_minutes, int rst_minutes)
-        {
-            try
-            {
-                InitializeComponent();
-                SetupWindow();
-
-                // 直接使用传入的工作时长（分钟），不再按整点重算，避免下一轮计时错乱
-                this.wrk_minutes = wrk_minutes;
-                this.wrk_seconds = 0;
-                this.rst_minutes = rst_minutes;
-                this.wrk_m = wrk_minutes;
-                this.input_flag = false;
-
-                Logger.Log($"[DBG] WorkFrm ctor(2arg) wrk={wrk_minutes} rst={rst_minutes} (按传入参数，不重算整点)");
-
-                SetFormPosition();
-                isRunning = true;
-                currentInstance = this;
-            }
-            catch (Exception ex)
-            {
-                LogException(ex, "构造函数异常");
-                throw;
-            }
         }
 
         /// <summary>
@@ -420,9 +391,14 @@ namespace Reminder
                 lblSecond.ForeColor = ThemeManager.OnPrimary;
                 labelColon.ForeColor = ThemeManager.OnPrimary;
 
-                int x = (Screen.PrimaryScreen.WorkingArea.Size.Width) / 2 - this.Width / 2;
-                int y = (Screen.PrimaryScreen.WorkingArea.Size.Height) / 2 - this.Height / 2;
-                this.Location = new Point(x, y);
+                // m-5：仅首次进入提醒态时居中一次，之后维持用户拖拽位置/多显示器布局，不再每帧跳回主屏
+                if (!_warnedOnce)
+                {
+                    int x = (Screen.PrimaryScreen.WorkingArea.Size.Width) / 2 - this.Width / 2;
+                    int y = (Screen.PrimaryScreen.WorkingArea.Size.Height) / 2 - this.Height / 2;
+                    this.Location = new Point(x, y);
+                    _warnedOnce = true;
+                }
 
                 if (hideWorkForm && this.Opacity < 0.5)
                 {

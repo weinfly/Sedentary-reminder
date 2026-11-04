@@ -128,7 +128,8 @@ namespace Reminder
 
         private static Configuration GetAppConfiguration()
         {
-            return ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            // M-2：与 SetConfigValue 一致使用 PerUserRoaming，确保读取到用户 AppData 下的 user.config 覆盖值
+            return ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoaming);
         }
 
         private static int GetConfigValue(Configuration config, string key, int defaultValue)

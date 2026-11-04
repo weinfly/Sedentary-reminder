@@ -64,11 +64,12 @@
       格式2（精确到分钟）：使用 WorkPeriods
       格式：开始小时:开始分钟-结束小时:结束分钟
       例如：9:0-12:0,13:0-16:30 表示 9:00-12:00 和 13:00-16:30
+      ⚠️ 注意：WorkPeriods 目前【客户端尚未实现】，以下仅作配置示例；当前实际生效的只有 AutoStartHours/AutoStopHours（整点小时级）。
     -->
     <add key="AutoStartHours" value="9,13"/>
     <add key="AutoStopHours" value="12,18"/>
     
-    <!-- 精确格式（优先使用此配置） -->
+    <!-- 精确格式（⚠️ 暂未实现，仅为配置示例，请勿依赖） -->
     <!-- <add key="WorkPeriods" value="9:0-12:0,13:0-16:0"/> -->
     
     <!-- 多显示器设置 -->

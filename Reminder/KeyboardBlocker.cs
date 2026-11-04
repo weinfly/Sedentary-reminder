@@ -1,78 +1,112 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 using System.Security.Principal;
+using System.Threading;
 
 namespace Reminder
 {
     /// <summary>
-    /// 键盘/鼠标输入锁定工具。
-    /// 警告：<see cref="Block"/> 通过 user32!BlockInput 进行【系统级、全局】输入锁定，会锁住整台机器的鼠标与键盘
-    /// （不限于本进程窗口）。若进程被强制终止且未调用 <see cref="Unblock"/>，系统输入将保持锁定直至重启或手动解锁。
-    /// 因此必须在所有退出路径（含异常）上配对调用 <see cref="Unblock"/>。
-    /// 该功能需要管理员权限；非管理员时 Block 不生效（返回 false，仅记录告警）。
+    /// 键盘/鼠标输入锁定工具（封装 user32!BlockInput，系统级全局锁定）。
+    /// ⚠️ 重要安全说明：
+    ///  - BlockInput 锁定的是【整台机器】的输入（不限于本进程窗口）。
+    ///  - 若进程在锁定期间崩溃/被任务管理器强杀且未解锁，输入将持续锁定直至重启或手动解锁，
+    ///    可能把用户“锁在机器外”。因此本类做了三道护栏：
+    ///    1) 默认仅强制锁定【前 2 分钟】（holdSeconds 默认 120s），到点自动解锁；
+    ///    2) 引用计数配对 Block/Unblock（多显示器各计一次，仅最后一个释放才真正解锁）；
+    ///    3) 需要管理员权限，非管理员时 Block 不生效（仅告警并返回 false）。
     /// </summary>
-    class KeyboardBlocker
+    public static class KeyboardBlocker
     {
-        // 以下权限常量与结构体为早期“提升特权”实现遗留，当前 BlockInput 已足够，保留以避免误删；
-        // 如后续需要显式启用 SeShutdownPrivilege 再启用。
-        private const int SE_PRIVILEGE_ENABLED = 0x00000002;
-        private const int TOKEN_QUERY = 0x00000008;
-        private const int TOKEN_ADJUST_PRIVILEGES = 0x00000020;
-        private const string SE_SHUTDOWN_NAME = "SeShutdownPrivilege";
+        [DllImport("user32.dll")]
+        private static extern bool BlockInput(bool fBlockIt);
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        private struct TokPriv1Luid
-        {
-            public int Count;
-            public long Luid;
-            public int Attr;
-        }
+        private static readonly object _sync = new object();
+        private static int _refCount = 0;          // 引用计数：多显示器下每个休息窗各 +1
+        private static bool _held = false;          // 当前是否真正处于物理锁定状态
+        private static Timer _autoUnlock;           // 自动解锁护栏（到点强制解锁，防崩溃锁死整机）
 
         /// <summary>
-        /// 锁定（禁用）整机的鼠标与键盘输入。需要管理员权限；非管理员时记录告警并返回 false。
+        /// 锁定系统输入。holdSeconds > 0 时到点自动解锁（兜底，防止进程崩溃导致整机锁死）。
+        /// 默认仅锁定前 2 分钟（120s），休息剩余时间由用户自行决定是否继续休息。
+        /// 需要管理员权限；非管理员时记录告警并返回 false（不实际锁定）。
         /// </summary>
-        public static bool Block()
+        public static bool Block(int holdSeconds = 120)
         {
-            if (IsAdministrator())
+            lock (_sync)
             {
-                BlockInput(true);//锁定鼠标及键盘
+                if (_refCount == 0)
+                {
+                    if (!IsAdministrator())
+                    {
+                        Logger.Log("[WARN] KeyboardBlocker.Block 需要管理员权限，锁输入未生效（请右键“以管理员身份运行”）");
+                        return false;
+                    }
+                    BlockInput(true);
+                    _held = true;
+                    Logger.Log("[DBG] KeyboardBlocker 已锁定系统输入");
+                }
+                _refCount++;
+
+                // 以最近一次 Block 的持有期为准重置自动解锁护栏
+                _autoUnlock?.Dispose();
+                _autoUnlock = null;
+                if (holdSeconds > 0)
+                {
+                    _autoUnlock = new Timer(_ => ForceUnlock(), null, holdSeconds * 1000, Timeout.Infinite);
+                }
                 return true;
             }
-            else
-            {
-                Logger.Log("[WARN] KeyboardBlocker.Block 需要管理员权限，锁输入未生效（请右键“以管理员身份运行”）");
-                return false;
-            }
         }
 
         /// <summary>
-        /// 解除（恢复）整机的鼠标与键盘输入锁定。
+        /// 解除系统输入锁定（引用计数配对）。仅当最后一个持有者释放时才真正解除物理锁定。
         /// </summary>
         public static bool Unblock()
         {
-            if (IsAdministrator())
+            lock (_sync)
             {
-                BlockInput(false);//解除键盘鼠标锁定
+                if (_refCount <= 0) return false;
+                _refCount--;
+                if (_refCount == 0)
+                {
+                    ForceUnlock();
+                }
                 return true;
-            }
-            else
-            {
-                // 非管理员时 Block 本就不生效，无需报错
-                return false;
             }
         }
 
         /// <summary>
-        /// 是否是管理员权限
+        /// 强制解除物理锁定（幂等，仅当当前确实持有时调用 BlockInput(false)）。
         /// </summary>
-        public static bool IsAdministrator()
+        private static void ForceUnlock()
         {
-            WindowsIdentity current = WindowsIdentity.GetCurrent();
-            WindowsPrincipal windowsPrincipal = new WindowsPrincipal(current);
-            return windowsPrincipal.IsInRole(WindowsBuiltInRole.Administrator);
+            lock (_sync)
+            {
+                _autoUnlock?.Dispose();
+                _autoUnlock = null;
+                if (_held)
+                {
+                    BlockInput(false);
+                    _held = false;
+                    Logger.Log("[DBG] KeyboardBlocker 已解除系统输入锁定");
+                }
+            }
         }
 
-        [DllImport("user32.dll")]
-        static extern void BlockInput(bool Block);
-
+        public static bool IsAdministrator()
+        {
+            try
+            {
+                using (var identity = WindowsIdentity.GetCurrent())
+                {
+                    var principal = new WindowsPrincipal(identity);
+                    return principal.IsInRole(WindowsBuiltInRole.Administrator);
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 }

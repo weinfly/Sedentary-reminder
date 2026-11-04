@@ -63,6 +63,8 @@ namespace Reminder
                 lblText.Text = $"⚠️ 久坐对身体不好！您已久坐{wrk_m}分钟了，\n键盘和鼠标被锁定，请站起来活动一下！";
                 lblTimerTitle.Text = "🔒 键盘已锁定 · 休息倒计时";
                 lblIcon.Text = "🏃";
+                lblHint.Text = "紧急解锁：按 Ctrl+Alt+Delete 调出安全界面，再切回即可恢复鼠标键盘。";
+                // M-1：默认仅锁定前 2 分钟（120s），到点自动解锁；多显示器引用计数配对解锁（见 KeyboardBlocker）
                 KeyboardBlocker.Block();
             }
             else
@@ -70,6 +72,7 @@ namespace Reminder
                 lblText.Text = $"💪 久坐对身体不好！您已久坐{wrk_m}分钟了，\n站起来活动下吧，顺便喝口水！(Alt+F4 退出)";
                 lblTimerTitle.Text = "☕ 休息倒计时";
                 lblIcon.Text = "☕";
+                lblHint.Text = "（Alt+F4 可退出休息）";
             }
 
             this.TopMost = true;
@@ -377,7 +380,17 @@ namespace Reminder
         private int GetConfigValue(string key, int defaultValue)
         {
             var value = ConfigurationManager.AppSettings[key];
-            return int.TryParse(value, out int result) ? result : defaultValue;
+            if (!int.TryParse(value, out int result))
+            {
+                return defaultValue;
+            }
+            // m-3：工作时长/休息时长必须为正数，避免误配 0 导致“工作0秒→休息→再0秒”死循环闪烁
+            if ((key == "WorkTimeValue" || key == "RestTimeValue") && result <= 0)
+            {
+                Logger.Log($"[WARN] RestFrm.GetConfigValue 无效 {key}={result}，使用默认 {defaultValue}");
+                return defaultValue;
+            }
+            return result;
         }
 
         private string GetConfigValue(string key, string defaultValue)
